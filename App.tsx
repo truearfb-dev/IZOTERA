@@ -8,7 +8,8 @@ import { generatePrediction } from './utils/astrology';
 enum AppState {
   Onboarding,
   Loading,
-  Result
+  Result,
+  Error
 }
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [lang, setLang] = useState<Language>('en');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   const handleOnboardingComplete = (data: UserData) => {
     setUserData(data);
@@ -29,9 +31,10 @@ export default function App() {
           const result = await generatePrediction(userData, lang);
           setPrediction(result);
           setAppState(AppState.Result);
-        } catch (error) {
+        } catch (error: any) {
           console.error("Failed to generate prediction:", error);
-          setAppState(AppState.Onboarding);
+          setErrorMessage(error.message || "The cosmic connection was interrupted.");
+          setAppState(AppState.Error);
         }
       };
       
@@ -50,6 +53,7 @@ export default function App() {
     setAppState(AppState.Onboarding);
     setUserData(null);
     setPrediction(null);
+    setErrorMessage('');
   };
 
   return (
@@ -96,6 +100,26 @@ export default function App() {
             lang={lang}
             onReset={handleReset} 
           />
+        )}
+
+        {appState === AppState.Error && (
+          <div className="w-full max-w-md mx-auto p-6 animate-[fadeIn_1s_ease-out]">
+            <div className="glass-panel rounded-2xl p-8 shadow-2xl text-center border-red-500/20 bg-red-900/10">
+               <div className="text-4xl mb-4">🌑</div>
+               <h2 className="text-2xl font-mystic text-red-200 mb-4 uppercase tracking-widest">
+                 {lang === 'en' ? "Cosmic Interference" : "Космические Помехи"}
+               </h2>
+               <p className="text-purple-200 mb-6 font-serif italic">
+                 {errorMessage}
+               </p>
+               <button 
+                 onClick={handleReset}
+                 className="px-8 py-3 rounded-lg font-mystic tracking-widest bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-all border border-white/10"
+               >
+                 {lang === 'en' ? "Try Again" : "Попробовать снова"}
+               </button>
+            </div>
+          </div>
         )}
       </main>
       

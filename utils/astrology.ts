@@ -22,7 +22,12 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
 };
 
 export const generatePrediction = async (userData: UserData, lang: Language): Promise<DailyPrediction> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    throw new Error("API Key is missing. Please add API_KEY to your environment variables.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   const prompt = `
     Generate a mystical daily astrology reading for:
@@ -73,8 +78,16 @@ export const generatePrediction = async (userData: UserData, lang: Language): Pr
 
   const text = response.text;
   if (!text) {
-    throw new Error("Failed to generate prediction");
+    throw new Error("Failed to generate prediction: No content returned.");
   }
 
-  return JSON.parse(text) as DailyPrediction;
+  // Sanitize Markdown code blocks if present (just in case)
+  const cleanText = text.replace(/```json|```/g, '').trim();
+
+  try {
+    return JSON.parse(cleanText) as DailyPrediction;
+  } catch (e) {
+    console.error("JSON Parse Error:", e);
+    throw new Error("The stars spoke in riddles (Invalid JSON response).");
+  }
 };
