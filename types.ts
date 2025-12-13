@@ -1,5 +1,3 @@
-export type Language = 'en' | 'ru';
-
 export enum ZodiacSign {
   Aries = "Aries",
   Taurus = "Taurus",

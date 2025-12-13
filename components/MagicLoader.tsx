@@ -1,14 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Language } from '../types';
 import { TRANSLATIONS } from '../constants';
 
-interface Props {
-  lang: Language;
-}
-
-export const MagicLoader: React.FC<Props> = ({ lang }) => {
+export const MagicLoader: React.FC = () => {
   const [messageIndex, setMessageIndex] = useState(0);
-  const messages = TRANSLATIONS[lang].messages;
+  const messages = TRANSLATIONS.messages;
 
   useEffect(() => {
     const interval = setInterval(() => {

@@ -1,16 +1,15 @@
 import React from 'react';
-import { UserData, DailyPrediction, Language } from '../types';
+import { UserData, DailyPrediction } from '../types';
 import { TRANSLATIONS } from '../constants';
 
 interface Props {
   data: DailyPrediction;
   userData: UserData;
-  lang: Language;
   onReset: () => void;
 }
 
-export const NatalCard: React.FC<Props> = ({ data, userData, lang, onReset }) => {
-  const t = TRANSLATIONS[lang];
+export const NatalCard: React.FC<Props> = ({ data, userData, onReset }) => {
+  const t = TRANSLATIONS;
 
   return (
     <div className="w-full max-w-2xl mx-auto p-4 animate-[fadeIn_1.5s_ease-out]">

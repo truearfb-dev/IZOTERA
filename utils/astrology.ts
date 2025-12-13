@@ -1,6 +1,6 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ZODIAC_DATES } from '../constants';
-import { UserData, ZodiacSign, DailyPrediction, Language } from '../types';
+import { UserData, ZodiacSign, DailyPrediction } from '../types';
 
 export const calculateZodiac = (dob: string): ZodiacSign => {
   if (!dob) return ZodiacSign.Aries;
@@ -21,7 +21,7 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
   return found ? found.sign : ZodiacSign.Capricorn; // Fallback
 };
 
-export const generatePrediction = async (userData: UserData, lang: Language): Promise<DailyPrediction> => {
+export const generatePrediction = async (userData: UserData): Promise<DailyPrediction> => {
   const apiKey = process.env.API_KEY;
   if (!apiKey) {
     throw new Error("API Key is missing. Please add API_KEY to your environment variables.");
@@ -38,7 +38,7 @@ export const generatePrediction = async (userData: UserData, lang: Language): Pr
     Elemental Core: ${userData.element}
     Archetype: ${userData.archetype}
     Current Feeling: ${userData.feeling}
-    Language: ${lang} (Provide the content in this language)
+    Language: Russian (MUST be in Russian language)
 
     I need:
     1. A short, mystical headline (max 6 words).
@@ -88,6 +88,6 @@ export const generatePrediction = async (userData: UserData, lang: Language): Pr
     return JSON.parse(cleanText) as DailyPrediction;
   } catch (e) {
     console.error("JSON Parse Error:", e);
-    throw new Error("The stars spoke in riddles (Invalid JSON response).");
+    throw new Error("Звезды говорят загадками (Ошибка обработки данных).");
   }
 };
