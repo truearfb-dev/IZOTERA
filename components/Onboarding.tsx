@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserData, ZodiacSign, Feeling, Language, Element, Archetype } from '../types';
+import { UserData, Feeling, Language, Element, Archetype } from '../types';
 import { calculateZodiac } from '../utils/astrology';
 import { TRANSLATIONS, FEELING_ICONS, ZODIAC_NAMES, ELEMENT_ICONS, ARCHETYPE_ICONS } from '../constants';
 
