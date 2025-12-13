@@ -2,14 +2,14 @@ import { Feeling, ZodiacSign, Element, Archetype } from './types';
 
 export const TRANSLATIONS = {
   // Onboarding
-  identifyYourself: "Представьтесь",
-  starsNeedName: "Звездам нужно ваше имя, чтобы найти вас.",
-  namePlaceholder: "Введите ваше имя",
-  nameLabel: "Имя",
-  dobLabel: "Дата рождения",
-  revealSigns: "Раскрыть знаки",
+  identifyYourself: "Добро пожаловать в Aetheria",
+  starsNeedName: "Ваш персональный навигатор по судьбе. Искусственный интеллект анализирует положение звезд в момент вашего рождения, чтобы создать уникальный прогноз энергии, любви и карьеры на сегодня.",
+  namePlaceholder: "Ваше Имя",
+  nameLabel: "Как к вам обращаться?",
+  dobLabel: "Дата вашего появления",
+  revealSigns: "Рассчитать натальную карту",
   preciseMoment: "Точный момент",
-  calculateAscendant: "Чтобы рассчитать ваш асцендент.",
+  calculateAscendant: "Время рождения необходимо для точного расчета Асцендента и положения домов.",
   sunDetected: "Солнце в знаке",
   tobLabel: "Время рождения",
   continue: "Продолжить",
@@ -19,7 +19,7 @@ export const TRANSLATIONS = {
   mirrorVoid: "В отражении пустоты, кто смотрит в ответ?",
   currentState: "Текущее состояние",
   spiritResonate: "Как резонирует ваш дух сегодня?",
-  consultStars: "Спросить звезды",
+  consultStars: "Получить Предсказание",
   // Loader
   messages: [
     "Выравнивание положения планет...",

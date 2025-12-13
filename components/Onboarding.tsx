@@ -28,6 +28,13 @@ export const Onboarding: React.FC<Props> = ({ onComplete }) => {
     setStep(prev => prev + 1);
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    // Auto-capitalize first letter
+    const capitalized = val.length > 0 ? val.charAt(0).toUpperCase() + val.slice(1) : val;
+    setFormData({ ...formData, name: capitalized });
+  };
+
   const handleSubmit = () => {
     if (formData.name && formData.dob && formData.feeling && formData.element && formData.archetype) {
       onComplete(formData as UserData);
@@ -51,12 +58,16 @@ export const Onboarding: React.FC<Props> = ({ onComplete }) => {
            ))}
         </div>
 
-        {/* Step 1: Identity */}
+        {/* Step 1: Identity & Intro */}
         {step === 1 && (
           <div className="space-y-8 animate-[slideUp_0.5s_ease-out] text-center">
-            <div>
-                <h2 className="text-3xl font-mystic text-amber-100 mb-2">{t.identifyYourself}</h2>
-                <p className="text-purple-200 text-sm italic opacity-80">{t.starsNeedName}</p>
+            
+            {/* Description / Hero Section */}
+            <div className="border-b border-white/5 pb-6">
+                <h2 className="text-2xl font-mystic text-amber-100 mb-3">{t.identifyYourself}</h2>
+                <p className="text-purple-200 text-sm italic leading-relaxed opacity-90">
+                  {t.starsNeedName}
+                </p>
             </div>
             
             <div className="space-y-6">
@@ -65,7 +76,7 @@ export const Onboarding: React.FC<Props> = ({ onComplete }) => {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  onChange={handleNameChange}
                   className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-center text-xl text-amber-50 font-mystic focus:border-amber-400/50 focus:bg-white/10 focus:shadow-[0_0_15px_rgba(251,191,36,0.1)] focus:outline-none transition-all placeholder:text-white/20"
                   placeholder={t.namePlaceholder}
                 />
