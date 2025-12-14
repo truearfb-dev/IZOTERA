@@ -36,6 +36,8 @@ export default function App() {
   // Check for Env Vars on mount
   useEffect(() => {
     const hasSupabase = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+    // We assume API_KEY is available via process.env as per guidelines
+    
     if (!hasSupabase) {
       setAppState(AppState.SetupRequired);
     }
@@ -241,33 +243,25 @@ export default function App() {
             <div className="text-4xl mb-4">⚙️</div>
             <h2 className="text-xl font-mystic text-amber-100 mb-4">Настройка Вселенной</h2>
             <p className="text-purple-200 text-sm mb-6">
-              Приложение не может подключиться к энергетическим потокам (API ключи не найдены).
+              Приложение не может подключиться к энергетическим потокам.
             </p>
             
             <div className="text-left space-y-4">
               <div className="bg-black/30 p-4 rounded-lg border border-white/5">
-                <p className="text-xs uppercase text-amber-500/70 mb-2 font-bold tracking-wider">Local Development</p>
-                <p className="text-xs text-gray-400 font-mono">
-                  Создайте файл <span className="text-white">.env</span> и добавьте ключи из <span className="text-white">env.example</span>.
+                <p className="text-xs uppercase text-amber-500/70 mb-2 font-bold tracking-wider">Vercel Configuration</p>
+                <p className="text-xs text-gray-400 font-mono mb-2">
+                   Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
                 </p>
-              </div>
-
-              <div className="bg-black/30 p-4 rounded-lg border border-white/5">
-                <p className="text-xs uppercase text-amber-500/70 mb-2 font-bold tracking-wider">Vercel / Production</p>
-                <p className="text-xs text-gray-400 font-mono">
-                  Перейдите в <span className="text-white">Settings → Environment Variables</span> и добавьте:
-                </p>
-                <ul className="text-[10px] text-gray-500 mt-2 font-mono list-disc list-inside">
+                <ul className="text-[10px] text-gray-500 font-mono list-disc list-inside">
                   <li>VITE_SUPABASE_URL</li>
                   <li>VITE_SUPABASE_ANON_KEY</li>
-                  <li>API_KEY</li>
                 </ul>
               </div>
             </div>
             
             <div className="mt-6 pt-4 border-t border-white/10">
                <p className="text-[10px] text-amber-500/50 uppercase tracking-widest animate-pulse">
-                 Ожидание синхронизации...
+                 После изменения ключей сделайте Redeploy
                </p>
             </div>
           </div>

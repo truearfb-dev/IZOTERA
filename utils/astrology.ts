@@ -22,16 +22,11 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
 };
 
 export const generatePrediction = async (userData: UserData): Promise<DailyPrediction> => {
-  const apiKey = process.env.API_KEY;
+  // Use process.env.API_KEY as per strict guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   console.log("Generating prediction for:", userData.name);
 
-  if (!apiKey) {
-    throw new Error("Ключ API отсутствует. Проверьте настройки .env");
-  }
-
-  const ai = new GoogleGenAI({ apiKey });
-  
   // Simplified prompt to reduce latency
   const prompt = `
     Role: Mystical Astrologer.
