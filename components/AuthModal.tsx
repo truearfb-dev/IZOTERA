@@ -4,9 +4,10 @@ import { TRANSLATIONS } from '../constants';
 
 interface Props {
   onSuccess: () => void;
+  onGuestAccess: () => void;
 }
 
-export const AuthModal: React.FC<Props> = ({ onSuccess }) => {
+export const AuthModal: React.FC<Props> = ({ onSuccess, onGuestAccess }) => {
   const [isLogin, setIsLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +36,16 @@ export const AuthModal: React.FC<Props> = ({ onSuccess }) => {
       }
       onSuccess();
     } catch (err: any) {
-      setError(err.message);
+      console.error(err);
+      let msg = err.message;
+      
+      // Translate technical errors to mystical/user-friendly Russian
+      if (msg.includes('rate limit')) msg = 'Потоки энергии перегружены (Rate Limit). Попробуйте позже или войдите как Гость.';
+      else if (msg.includes('Invalid login')) msg = 'Неверный шифр доступа (логин или пароль).';
+      else if (msg.includes('already registered')) msg = 'Эта душа уже записана в книге судеб. Попробуйте войти.';
+      else if (msg.includes('Password should be')) msg = 'Тайный ключ слишком прост (минимум 6 символов).';
+      
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -73,7 +83,7 @@ export const AuthModal: React.FC<Props> = ({ onSuccess }) => {
           </div>
 
           {error && (
-            <div className="text-red-300 text-xs bg-red-900/20 p-2 rounded border border-red-500/20 text-center">
+            <div className="text-red-300 text-xs bg-red-900/20 p-3 rounded border border-red-500/20 text-center leading-relaxed">
               {error}
             </div>
           )}
@@ -83,17 +93,27 @@ export const AuthModal: React.FC<Props> = ({ onSuccess }) => {
             disabled={loading}
             className="w-full py-3 rounded-xl font-mystic tracking-[0.2em] uppercase bg-gradient-to-r from-purple-700 to-indigo-800 text-white shadow-[0_0_15px_rgba(88,28,135,0.4)] hover:shadow-[0_0_25px_rgba(168,85,247,0.4)] border border-purple-500/30 transition-all transform active:scale-95 disabled:opacity-50"
           >
-            {loading ? "..." : (isLogin ? t.signIn : t.signUp)}
+            {loading ? "Связь с космосом..." : (isLogin ? t.signIn : t.signUp)}
           </button>
         </form>
+        
+        <div className="mt-4 pt-4 border-t border-white/5 space-y-4">
+            <button
+                type="button"
+                onClick={onGuestAccess}
+                className="w-full py-3 rounded-xl font-mystic tracking-[0.2em] uppercase bg-white/5 hover:bg-white/10 text-amber-100/70 hover:text-amber-100 border border-white/10 transition-all"
+            >
+                Продолжить как Гость
+            </button>
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={() => setIsLogin(!isLogin)}
-            className="text-xs text-purple-300 hover:text-amber-200 transition-colors border-b border-transparent hover:border-amber-200 uppercase tracking-wide"
-          >
-            {isLogin ? t.authSwitchToRegister : t.authSwitchToLogin}
-          </button>
+            <div className="text-center">
+            <button
+                onClick={() => { setIsLogin(!isLogin); setError(null); }}
+                className="text-xs text-purple-300 hover:text-amber-200 transition-colors border-b border-transparent hover:border-amber-200 uppercase tracking-wide"
+            >
+                {isLogin ? t.authSwitchToRegister : t.authSwitchToLogin}
+            </button>
+            </div>
         </div>
       </div>
     </div>

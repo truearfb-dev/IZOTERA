@@ -10,7 +10,7 @@ import { UserData, DailyPrediction } from './types';
 import { generatePrediction } from './utils/astrology';
 
 enum AppState {
-  SetupRequired, // New state for missing keys
+  SetupRequired,
   Onboarding,
   Auth,
   Paywall,
@@ -20,6 +20,7 @@ enum AppState {
 }
 
 const MAX_FREE_PREDICTIONS = 3;
+const GUEST_ID = 'guest-session';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(AppState.Onboarding);
@@ -86,6 +87,14 @@ export default function App() {
 
   const fetchProfile = async () => {
     if (!session) return;
+    
+    // Guest bypass
+    if (session.user.id === GUEST_ID) {
+      setUsageCount(0);
+      setIsPremium(false);
+      return;
+    }
+
     setIsLoadingProfile(true);
     try {
       let { data, error } = await supabase
@@ -149,6 +158,19 @@ export default function App() {
       setAppState(AppState.Onboarding);
     }
   };
+  
+  const handleGuestAccess = () => {
+    // Create a fake session for Guest Mode
+    const guestSession = {
+      user: { id: GUEST_ID, email: 'guest@aetheria.void' },
+      access_token: 'guest-token',
+    };
+    setSession(guestSession);
+    // Proceed immediately
+    if (userData) {
+       setAppState(AppState.Loading);
+    }
+  };
 
   const handleUnlockPremium = async () => {
     setIsPremium(true); 
@@ -170,7 +192,8 @@ export default function App() {
           setPrediction(result);
           setAppState(AppState.Result);
           
-          if (!isPremium) {
+          // Only update DB if it's a real user, not a guest
+          if (!isPremium && session.user.id !== GUEST_ID) {
             const newCount = usageCount + 1;
             setUsageCount(newCount);
             
@@ -219,14 +242,22 @@ export default function App() {
         
         {session && (
           <div className="flex items-center gap-4">
-             {!isPremium && (
+             {!isPremium && session.user.id !== GUEST_ID && (
                <div className="text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
                  {usageCount}/{MAX_FREE_PREDICTIONS} Free
                </div>
              )}
+             {session.user.id === GUEST_ID && (
+               <div className="text-[10px] text-amber-300/50 uppercase tracking-widest border border-amber-500/20 px-2 py-1 rounded-full">
+                 Guest
+               </div>
+             )}
              <button 
                onClick={() => {
-                 supabase.auth.signOut(); 
+                 if (session.user.id !== GUEST_ID) {
+                    supabase.auth.signOut(); 
+                 }
+                 setSession(null);
                  setAppState(AppState.Onboarding);
                  setUserData(null);
                }}
@@ -274,7 +305,10 @@ export default function App() {
         )}
         
         {appState === AppState.Auth && (
-          <AuthModal onSuccess={handleAuthSuccess} />
+          <AuthModal 
+            onSuccess={handleAuthSuccess} 
+            onGuestAccess={handleGuestAccess}
+          />
         )}
         
         {appState === AppState.Paywall && (
