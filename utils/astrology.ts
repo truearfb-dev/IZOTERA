@@ -25,7 +25,6 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
   const apiKey = process.env.API_KEY;
   
   console.log("Generating prediction for:", userData.name);
-  console.log("API Key present:", !!apiKey);
 
   if (!apiKey) {
     throw new Error("Ключ API отсутствует. Проверьте настройки .env");
@@ -33,24 +32,20 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
 
   const ai = new GoogleGenAI({ apiKey });
   
+  // Simplified prompt to reduce latency
   const prompt = `
-    Generate a mystical daily astrology reading for:
-    Name: ${userData.name}
-    Date of Birth: ${userData.dob}
-    Time of Birth: ${userData.tob}
-    Zodiac Sign: ${userData.zodiacSign}
-    Elemental Core: ${userData.element}
-    Archetype: ${userData.archetype}
-    Current Feeling: ${userData.feeling}
-    Language: Russian (MUST be in Russian language)
+    Role: Mystical Astrologer.
+    Target: ${userData.name}, Born: ${userData.dob} (${userData.tob}).
+    Traits: ${userData.zodiacSign}, ${userData.element}, ${userData.archetype}.
+    State: ${userData.feeling}.
+    Language: Russian.
 
-    I need:
-    1. A short, mystical headline (max 6 words).
-    2. A deep, poetic insight (2-3 sentences).
-    3. A "Power Color" name and its hex code.
-    4. Numeric stats (0-100) for "love", "career", and "vitality".
-
-    The tone should be ethereal, slightly esoteric, but encouraging.
+    Generate a JSON response with:
+    - headline (mystical, max 6 words)
+    - insight (poetic advice, 2-3 sentences)
+    - powerColor (name)
+    - powerColorHex (hex code)
+    - stats (love, career, vitality as integers 0-100)
   `;
 
   try {
@@ -82,13 +77,13 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
     });
 
     const text = response.text;
-    console.log("AI Response received:", text ? "Yes" : "No");
+    console.log("AI Response received (length):", text?.length);
 
     if (!text) {
       throw new Error("Звезды молчат (пустой ответ от API).");
     }
 
-    // Robust JSON extraction: Find the first '{' and last '}'
+    // Robust JSON extraction
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const cleanJson = jsonMatch ? jsonMatch[0] : text;
 
@@ -100,7 +95,6 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
     }
   } catch (error: any) {
     console.error("Generation Error:", error);
-    // Enhance error message for user
     if (error.message?.includes('429')) {
        throw new Error("Слишком много запросов к космосу. Попробуйте позже.");
     }

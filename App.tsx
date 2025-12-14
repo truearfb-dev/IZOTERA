@@ -72,11 +72,11 @@ export default function App() {
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
     if (appState === AppState.Loading) {
-      // If stuck in loading for more than 25 seconds, force error
+      // If stuck in loading for more than 60 seconds (increased from 25), force error
       timeout = setTimeout(() => {
-        setErrorMessage("Ответ вселенной задерживается. Пожалуйста, проверьте соединение или попробуйте снова.");
+        setErrorMessage("Звезды сегодня задумчивы. Время ожидания истекло.");
         setAppState(AppState.Error);
-      }, 25000);
+      }, 60000);
     }
     return () => clearTimeout(timeout);
   }, [appState]);
@@ -200,6 +200,11 @@ export default function App() {
     setErrorMessage('');
   };
 
+  const handleRetry = () => {
+    setErrorMessage('');
+    setAppState(AppState.Loading);
+  };
+
   return (
     <div className="min-h-screen w-full relative flex flex-col">
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#0f0c29_90%)] z-0"></div>
@@ -282,12 +287,20 @@ export default function App() {
                <p className="text-purple-200 mb-6 font-serif italic">
                  {errorMessage}
                </p>
-               <button 
-                 onClick={handleReset}
-                 className="px-8 py-3 rounded-lg font-mystic tracking-widest bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-all border border-white/10"
-               >
-                 Попробовать снова
-               </button>
+               <div className="flex flex-col gap-3">
+                 <button 
+                   onClick={handleRetry}
+                   className="px-8 py-3 rounded-lg font-mystic tracking-widest bg-amber-600 text-white hover:bg-amber-500 transition-all border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
+                 >
+                   Попробовать снова
+                 </button>
+                 <button 
+                   onClick={handleReset}
+                   className="text-xs text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest"
+                 >
+                   Начать сначала
+                 </button>
+               </div>
             </div>
           </div>
         )}
