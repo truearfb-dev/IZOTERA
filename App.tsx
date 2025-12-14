@@ -10,9 +10,10 @@ import { UserData, DailyPrediction } from './types';
 import { generatePrediction } from './utils/astrology';
 
 enum AppState {
+  SetupRequired, // New state for missing keys
   Onboarding,
-  Auth,    // User must sign in/up to proceed
-  Paywall, // User reached limits
+  Auth,
+  Paywall,
   Loading,
   Result,
   Error
@@ -32,8 +33,20 @@ export default function App() {
   const [isPremium, setIsPremium] = useState(false);
   const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
+  // Check for Env Vars on mount
+  useEffect(() => {
+    const hasSupabase = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+    // Note: API_KEY is injected by Vite define, checking prompt availability or assuming true if build passed isn't enough, 
+    // but usually if Supabase is missing, others are too.
+    if (!hasSupabase) {
+      setAppState(AppState.SetupRequired);
+    }
+  }, []);
+
   // Initialize Session
   useEffect(() => {
+    if (appState === AppState.SetupRequired) return;
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
@@ -45,7 +58,7 @@ export default function App() {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [appState]);
 
   // Fetch Profile when Session Changes
   useEffect(() => {
@@ -68,7 +81,6 @@ export default function App() {
         .single();
         
       if (error) {
-        // If profile doesn't exist yet (race condition with trigger), retry or default
         console.error('Error fetching profile:', error);
       } else if (data) {
         setUsageCount(data.free_usage_count || 0);
@@ -83,10 +95,6 @@ export default function App() {
 
   const handleOnboardingComplete = (data: UserData) => {
     setUserData(data);
-    
-    // Logic Flow:
-    // 1. If not logged in -> Go to Auth
-    // 2. If logged in -> Check limits
     if (!session) {
       setAppState(AppState.Auth);
     } else {
@@ -95,9 +103,8 @@ export default function App() {
   };
 
   const checkLimitsAndProceed = () => {
-    if (isLoadingProfile) return; // Wait for profile
+    if (isLoadingProfile) return;
     
-    // Recalculate based on fresh state
     if (!isPremium && usageCount >= MAX_FREE_PREDICTIONS) {
       setAppState(AppState.Paywall);
     } else {
@@ -105,11 +112,8 @@ export default function App() {
     }
   };
 
-  // Called when Auth is successful
   const handleAuthSuccess = async () => {
-    // Wait a brief moment for the session to propagate and profile to fetch
     await fetchProfile();
-    // After auth, if we have userData waiting, check limits
     if (userData) {
       checkLimitsAndProceed();
     } else {
@@ -118,17 +122,7 @@ export default function App() {
   };
 
   const handleUnlockPremium = async () => {
-    // In a real app, this is triggered via Webhook from backend.
-    // For demo/MVP, we can optimistically update if we trust the client (we shouldn't)
-    // OR we trigger a call to our Edge Function.
-    // For now, we will simulate the update on the client for immediate feedback, 
-    // assuming the Edge Function flow you set up handles the actual DB update.
-    
-    // NOTE: This assumes you've implemented the payment flow.
-    // Since we are mocking the payment UI in Paywall.tsx, let's mock the result here too.
-    
     setIsPremium(true); 
-    // If they were trying to get a result, proceed to loading
     if (userData) {
       setAppState(AppState.Loading);
     } else {
@@ -136,9 +130,7 @@ export default function App() {
     }
   };
 
-  // Effect to trigger generation
   useEffect(() => {
-    // Only generate if we are in Loading state, have user data, have session, and permissions are clear
     if (appState === AppState.Loading && userData && session) {
       const fetchPrediction = async () => {
         try {
@@ -146,12 +138,10 @@ export default function App() {
           setPrediction(result);
           setAppState(AppState.Result);
           
-          // Increment usage in DB
           if (!isPremium) {
             const newCount = usageCount + 1;
             setUsageCount(newCount);
             
-            // Fire and forget update
             await supabase
               .from('profiles')
               .update({ free_usage_count: newCount })
@@ -178,7 +168,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen w-full relative flex flex-col">
-      {/* Persistent "Stars" background is in index.html, adding a vignette here */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#0f0c29_90%)] z-0"></div>
 
       <header className="relative z-10 p-6 flex justify-between items-center max-w-4xl mx-auto w-full">
@@ -186,7 +175,6 @@ export default function App() {
           Aetheria
         </h1>
         
-        {/* User Status / Logout */}
         {session && (
           <div className="flex items-center gap-4">
              {!isPremium && (
@@ -209,6 +197,23 @@ export default function App() {
       </header>
 
       <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24">
+        {appState === AppState.SetupRequired && (
+          <div className="glass-panel p-8 rounded-2xl max-w-md text-center border-amber-500/30">
+            <div className="text-4xl mb-4">⚙️</div>
+            <h2 className="text-xl font-mystic text-amber-100 mb-4">Требуется Настройка</h2>
+            <p className="text-purple-200 text-sm mb-4">
+              Приложение не видит ключи доступа к базе данных и AI.
+            </p>
+            <div className="text-left bg-black/30 p-4 rounded text-xs font-mono text-gray-400 mb-4">
+              1. Создайте файл <strong>.env</strong><br/>
+              2. Скопируйте содержимое из <strong>env.example</strong><br/>
+              3. Вставьте свои ключи.<br/>
+              4. Перезапустите терминал.
+            </div>
+            <p className="text-xs text-amber-500/50 uppercase tracking-widest">Ожидание конфигурации...</p>
+          </div>
+        )}
+
         {appState === AppState.Onboarding && (
           <Onboarding onComplete={handleOnboardingComplete} />
         )}
@@ -254,7 +259,6 @@ export default function App() {
         )}
       </main>
       
-      {/* Install Prompt Button */}
       <InstallPrompt />
       
       <footer className="relative z-10 p-4 text-center text-purple-900/40 text-xs font-serif">
