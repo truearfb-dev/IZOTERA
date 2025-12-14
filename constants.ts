@@ -44,6 +44,16 @@ export const TRANSLATIONS = {
   subscribeAction: "Открыть доступ за 299₽ / мес",
   restorePurchase: "Восстановить покупки",
   
+  // Auth
+  authTitle: "Печать Судьбы",
+  authDesc: "Чтобы сохранить связь с космосом, назовите себя.",
+  emailLabel: "Электронная почта",
+  passwordLabel: "Тайный ключ (Пароль)",
+  signIn: "Войти",
+  signUp: "Зарегистрироваться",
+  authSwitchToLogin: "Уже есть печать? Войти",
+  authSwitchToRegister: "Нет печати? Создать",
+  
   // Feelings
   [Feeling.Lost]: "Потерянность",
   [Feeling.Energetic]: "Энергичность",

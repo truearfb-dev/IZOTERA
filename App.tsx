@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
+import { supabase } from './lib/supabase';
 import { Onboarding } from './components/Onboarding';
 import { MagicLoader } from './components/MagicLoader';
 import { NatalCard } from './components/NatalCard';
 import { InstallPrompt } from './components/InstallPrompt';
 import { Paywall } from './components/Paywall';
+import { AuthModal } from './components/AuthModal';
 import { UserData, DailyPrediction } from './types';
 import { generatePrediction } from './utils/astrology';
 
 enum AppState {
   Onboarding,
-  Paywall, // New state
+  Auth,    // User must sign in/up to proceed
+  Paywall, // User reached limits
   Loading,
   Result,
   Error
@@ -23,23 +26,78 @@ export default function App() {
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
   
-  // Usage Tracking State
+  // Supabase State
+  const [session, setSession] = useState<any>(null);
   const [usageCount, setUsageCount] = useState(0);
   const [isPremium, setIsPremium] = useState(false);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(false);
 
-  // Load persistent state on mount
+  // Initialize Session
   useEffect(() => {
-    const savedCount = localStorage.getItem('aetheria_usage_count');
-    const savedPremium = localStorage.getItem('aetheria_is_premium');
-    
-    if (savedCount) setUsageCount(parseInt(savedCount, 10));
-    if (savedPremium === 'true') setIsPremium(true);
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  // Fetch Profile when Session Changes
+  useEffect(() => {
+    if (session) {
+      fetchProfile();
+    } else {
+      setUsageCount(0);
+      setIsPremium(false);
+    }
+  }, [session]);
+
+  const fetchProfile = async () => {
+    if (!session) return;
+    setIsLoadingProfile(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('free_usage_count, is_premium')
+        .eq('id', session.user.id)
+        .single();
+        
+      if (error) {
+        // If profile doesn't exist yet (race condition with trigger), retry or default
+        console.error('Error fetching profile:', error);
+      } else if (data) {
+        setUsageCount(data.free_usage_count || 0);
+        setIsPremium(data.is_premium || false);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
 
   const handleOnboardingComplete = (data: UserData) => {
     setUserData(data);
     
-    // Check limits
+    // Logic Flow:
+    // 1. If not logged in -> Go to Auth
+    // 2. If logged in -> Check limits
+    if (!session) {
+      setAppState(AppState.Auth);
+    } else {
+      checkLimitsAndProceed();
+    }
+  };
+
+  const checkLimitsAndProceed = () => {
+    if (isLoadingProfile) return; // Wait for profile
+    
+    // Recalculate based on fresh state
     if (!isPremium && usageCount >= MAX_FREE_PREDICTIONS) {
       setAppState(AppState.Paywall);
     } else {
@@ -47,9 +105,29 @@ export default function App() {
     }
   };
 
-  const handleUnlockPremium = () => {
-    setIsPremium(true);
-    localStorage.setItem('aetheria_is_premium', 'true');
+  // Called when Auth is successful
+  const handleAuthSuccess = async () => {
+    // Wait a brief moment for the session to propagate and profile to fetch
+    await fetchProfile();
+    // After auth, if we have userData waiting, check limits
+    if (userData) {
+      checkLimitsAndProceed();
+    } else {
+      setAppState(AppState.Onboarding);
+    }
+  };
+
+  const handleUnlockPremium = async () => {
+    // In a real app, this is triggered via Webhook from backend.
+    // For demo/MVP, we can optimistically update if we trust the client (we shouldn't)
+    // OR we trigger a call to our Edge Function.
+    // For now, we will simulate the update on the client for immediate feedback, 
+    // assuming the Edge Function flow you set up handles the actual DB update.
+    
+    // NOTE: This assumes you've implemented the payment flow.
+    // Since we are mocking the payment UI in Paywall.tsx, let's mock the result here too.
+    
+    setIsPremium(true); 
     // If they were trying to get a result, proceed to loading
     if (userData) {
       setAppState(AppState.Loading);
@@ -58,19 +136,26 @@ export default function App() {
     }
   };
 
+  // Effect to trigger generation
   useEffect(() => {
-    if (appState === AppState.Loading && userData) {
+    // Only generate if we are in Loading state, have user data, have session, and permissions are clear
+    if (appState === AppState.Loading && userData && session) {
       const fetchPrediction = async () => {
         try {
           const result = await generatePrediction(userData);
           setPrediction(result);
           setAppState(AppState.Result);
           
-          // Increment usage count ONLY on success
+          // Increment usage in DB
           if (!isPremium) {
             const newCount = usageCount + 1;
             setUsageCount(newCount);
-            localStorage.setItem('aetheria_usage_count', newCount.toString());
+            
+            // Fire and forget update
+            await supabase
+              .from('profiles')
+              .update({ free_usage_count: newCount })
+              .eq('id', session.user.id);
           }
           
         } catch (error: any) {
@@ -82,7 +167,7 @@ export default function App() {
       
       fetchPrediction();
     }
-  }, [appState, userData, isPremium, usageCount]);
+  }, [appState, userData, session, isPremium]);
 
   const handleReset = () => {
     setAppState(AppState.Onboarding);
@@ -96,22 +181,40 @@ export default function App() {
       {/* Persistent "Stars" background is in index.html, adding a vignette here */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#0f0c29_90%)] z-0"></div>
 
-      <header className="relative z-10 p-6 flex justify-center items-center">
-        <h1 className="text-2xl md:text-4xl font-mystic tracking-[0.5em] text-amber-500/80 uppercase text-center drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">
+      <header className="relative z-10 p-6 flex justify-between items-center max-w-4xl mx-auto w-full">
+        <h1 className="text-2xl md:text-3xl font-mystic tracking-[0.3em] text-amber-500/80 uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">
           Aetheria
         </h1>
         
-        {/* Optional: Usage Indicator for non-premium users */}
-        {!isPremium && usageCount < MAX_FREE_PREDICTIONS && (
-           <div className="absolute right-4 top-6 text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
-             {usageCount}/{MAX_FREE_PREDICTIONS} Free
-           </div>
+        {/* User Status / Logout */}
+        {session && (
+          <div className="flex items-center gap-4">
+             {!isPremium && (
+               <div className="text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
+                 {usageCount}/{MAX_FREE_PREDICTIONS} Free
+               </div>
+             )}
+             <button 
+               onClick={() => {
+                 supabase.auth.signOut(); 
+                 setAppState(AppState.Onboarding);
+                 setUserData(null);
+               }}
+               className="text-xs text-white/40 hover:text-white transition-colors"
+             >
+               Выйти
+             </button>
+          </div>
         )}
       </header>
 
       <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24">
         {appState === AppState.Onboarding && (
           <Onboarding onComplete={handleOnboardingComplete} />
+        )}
+        
+        {appState === AppState.Auth && (
+          <AuthModal onSuccess={handleAuthSuccess} />
         )}
         
         {appState === AppState.Paywall && (
