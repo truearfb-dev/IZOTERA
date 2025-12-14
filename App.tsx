@@ -35,10 +35,11 @@ export default function App() {
 
   // Check for Env Vars on mount
   useEffect(() => {
+    // Check for both standard Vite env vars and the polyfilled process.env
     const hasSupabase = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
-    // We assume API_KEY is available via process.env as per guidelines
+    const hasGemini = import.meta.env.VITE_GEMINI_API_KEY || process.env.API_KEY;
     
-    if (!hasSupabase) {
+    if (!hasSupabase || !hasGemini) {
       setAppState(AppState.SetupRequired);
     }
   }, []);
@@ -250,11 +251,12 @@ export default function App() {
               <div className="bg-black/30 p-4 rounded-lg border border-white/5">
                 <p className="text-xs uppercase text-amber-500/70 mb-2 font-bold tracking-wider">Vercel Configuration</p>
                 <p className="text-xs text-gray-400 font-mono mb-2">
-                   Check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
+                   Убедитесь, что переменная называется <code>VITE_GEMINI_API_KEY</code>.
                 </p>
                 <ul className="text-[10px] text-gray-500 font-mono list-disc list-inside">
                   <li>VITE_SUPABASE_URL</li>
                   <li>VITE_SUPABASE_ANON_KEY</li>
+                  <li className="text-amber-300">VITE_GEMINI_API_KEY</li>
                 </ul>
               </div>
             </div>

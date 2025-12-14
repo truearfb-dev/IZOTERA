@@ -22,7 +22,7 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
 };
 
 export const generatePrediction = async (userData: UserData): Promise<DailyPrediction> => {
-  // Use process.env.API_KEY as per strict guidelines
+  // Always use process.env.API_KEY per guidelines
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   console.log("Generating prediction for:", userData.name);
