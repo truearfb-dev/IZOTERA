@@ -23,8 +23,12 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
 
 export const generatePrediction = async (userData: UserData): Promise<DailyPrediction> => {
   const apiKey = process.env.API_KEY;
+  
+  console.log("Generating prediction for:", userData.name);
+  console.log("API Key present:", !!apiKey);
+
   if (!apiKey) {
-    throw new Error("API Key is missing. Please add API_KEY to your environment variables.");
+    throw new Error("Ключ API отсутствует. Проверьте настройки .env");
   }
 
   const ai = new GoogleGenAI({ apiKey });
@@ -49,45 +53,57 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
     The tone should be ethereal, slightly esoteric, but encouraging.
   `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          headline: { type: Type.STRING },
-          insight: { type: Type.STRING },
-          powerColor: { type: Type.STRING },
-          powerColorHex: { type: Type.STRING },
-          stats: {
-            type: Type.OBJECT,
-            properties: {
-              love: { type: Type.INTEGER },
-              career: { type: Type.INTEGER },
-              vitality: { type: Type.INTEGER },
-            },
-            required: ['love', 'career', 'vitality'],
-          },
-        },
-        required: ['headline', 'insight', 'powerColor', 'powerColorHex', 'stats'],
-      }
-    }
-  });
-
-  const text = response.text;
-  if (!text) {
-    throw new Error("Failed to generate prediction: No content returned.");
-  }
-
-  // Sanitize Markdown code blocks if present (just in case)
-  const cleanText = text.replace(/```json|```/g, '').trim();
-
   try {
-    return JSON.parse(cleanText) as DailyPrediction;
-  } catch (e) {
-    console.error("JSON Parse Error:", e);
-    throw new Error("Звезды говорят загадками (Ошибка обработки данных).");
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            headline: { type: Type.STRING },
+            insight: { type: Type.STRING },
+            powerColor: { type: Type.STRING },
+            powerColorHex: { type: Type.STRING },
+            stats: {
+              type: Type.OBJECT,
+              properties: {
+                love: { type: Type.INTEGER },
+                career: { type: Type.INTEGER },
+                vitality: { type: Type.INTEGER },
+              },
+              required: ['love', 'career', 'vitality'],
+            },
+          },
+          required: ['headline', 'insight', 'powerColor', 'powerColorHex', 'stats'],
+        }
+      }
+    });
+
+    const text = response.text;
+    console.log("AI Response received:", text ? "Yes" : "No");
+
+    if (!text) {
+      throw new Error("Звезды молчат (пустой ответ от API).");
+    }
+
+    // Robust JSON extraction: Find the first '{' and last '}'
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    const cleanJson = jsonMatch ? jsonMatch[0] : text;
+
+    try {
+      return JSON.parse(cleanJson) as DailyPrediction;
+    } catch (e) {
+      console.error("JSON Parse Error. Raw text:", text);
+      throw new Error("Не удалось расшифровать послание звезд (ошибка данных).");
+    }
+  } catch (error: any) {
+    console.error("Generation Error:", error);
+    // Enhance error message for user
+    if (error.message?.includes('429')) {
+       throw new Error("Слишком много запросов к космосу. Попробуйте позже.");
+    }
+    throw error;
   }
 };

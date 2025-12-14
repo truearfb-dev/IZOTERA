@@ -68,6 +68,19 @@ export default function App() {
     }
   }, [session]);
 
+  // Safety Timeout for Loading State
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    if (appState === AppState.Loading) {
+      // If stuck in loading for more than 25 seconds, force error
+      timeout = setTimeout(() => {
+        setErrorMessage("Ответ вселенной задерживается. Пожалуйста, проверьте соединение или попробуйте снова.");
+        setAppState(AppState.Error);
+      }, 25000);
+    }
+    return () => clearTimeout(timeout);
+  }, [appState]);
+
   const fetchProfile = async () => {
     if (!session) return;
     setIsLoadingProfile(true);
@@ -143,11 +156,14 @@ export default function App() {
     }
   };
 
+  // Main Generation Effect
   useEffect(() => {
     if (appState === AppState.Loading && userData && session) {
       const fetchPrediction = async () => {
         try {
+          console.log("Starting prediction generation...");
           const result = await generatePrediction(userData);
+          console.log("Prediction generated successfully");
           setPrediction(result);
           setAppState(AppState.Result);
           
@@ -156,7 +172,6 @@ export default function App() {
             setUsageCount(newCount);
             
             // Optimistic update locally
-            
             await supabase
               .from('profiles')
               .update({ free_usage_count: newCount })
@@ -171,6 +186,10 @@ export default function App() {
       };
       
       fetchPrediction();
+    } else if (appState === AppState.Loading && !userData) {
+        // Edge case: Loading state but data lost (e.g. refresh)
+        console.warn("Loading state active but userData is missing. Resetting to Onboarding.");
+        setAppState(AppState.Onboarding);
     }
   }, [appState, userData, session, isPremium]);
 
