@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Onboarding } from './components/Onboarding';
 import { MagicLoader } from './components/MagicLoader';
 import { NatalCard } from './components/NatalCard';
+import { InstallPrompt } from './components/InstallPrompt';
 import { UserData, DailyPrediction } from './types';
 import { generatePrediction } from './utils/astrology';
 
@@ -59,7 +60,7 @@ export default function App() {
         </h1>
       </header>
 
-      <main className="relative z-10 flex-grow flex items-center justify-center p-4">
+      <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24">
         {appState === AppState.Onboarding && (
           <Onboarding onComplete={handleOnboardingComplete} />
         )}
@@ -96,6 +97,9 @@ export default function App() {
           </div>
         )}
       </main>
+      
+      {/* Install Prompt Button */}
+      <InstallPrompt />
       
       <footer className="relative z-10 p-4 text-center text-purple-900/40 text-xs font-serif">
         &copy; {new Date().getFullYear()} Cosmic Alignments. Deterministic Logic Engine.
