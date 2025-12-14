@@ -22,8 +22,17 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
 };
 
 export const generatePrediction = async (userData: UserData): Promise<DailyPrediction> => {
-  // Always use process.env.API_KEY per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Retrieve Key
+  const apiKey = process.env.API_KEY;
+  
+  // Debug log (masked)
+  console.log("API Key present:", !!apiKey, apiKey ? `(Length: ${apiKey.length})` : "(Missing)");
+
+  if (!apiKey) {
+    throw new Error("API Key отсутствует. Проверьте переменную VITE_GEMINI_API_KEY.");
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   console.log("Generating prediction for:", userData.name);
 
@@ -89,9 +98,12 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
       throw new Error("Не удалось расшифровать послание звезд (ошибка данных).");
     }
   } catch (error: any) {
-    console.error("Generation Error:", error);
+    console.error("Generation Error Full:", error);
     if (error.message?.includes('429')) {
        throw new Error("Слишком много запросов к космосу. Попробуйте позже.");
+    }
+    if (error.message?.includes('400')) {
+       throw new Error("Ошибка запроса к звездам (400). Проверьте ключ.");
     }
     throw error;
   }

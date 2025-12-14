@@ -11,7 +11,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       // This "polyfills" process.env for the browser to prevent crashes
-      'process.env.API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.API_KEY),
+      // Use fallback to empty string to ensure valid JSON
+      'process.env.API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY || env.API_KEY || ''),
       'process.env': JSON.stringify({}), 
     },
   };
