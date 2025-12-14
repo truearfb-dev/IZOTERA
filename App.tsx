@@ -36,8 +36,6 @@ export default function App() {
   // Check for Env Vars on mount
   useEffect(() => {
     const hasSupabase = import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
-    // Note: API_KEY is injected by Vite define, checking prompt availability or assuming true if build passed isn't enough, 
-    // but usually if Supabase is missing, others are too.
     if (!hasSupabase) {
       setAppState(AppState.SetupRequired);
     }
@@ -74,11 +72,26 @@ export default function App() {
     if (!session) return;
     setIsLoadingProfile(true);
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('profiles')
         .select('free_usage_count, is_premium')
         .eq('id', session.user.id)
         .single();
+      
+      // Self-healing: If profile missing (PGRST116), try to create it manually
+      if (error && error.code === 'PGRST116') {
+         console.log("Profile missing, attempting fallback creation...");
+         const { data: newData, error: insertError } = await supabase
+            .from('profiles')
+            .insert([{ id: session.user.id, free_usage_count: 0, is_premium: false }])
+            .select()
+            .single();
+            
+         if (!insertError && newData) {
+             data = newData;
+             error = null;
+         }
+      }
         
       if (error) {
         console.error('Error fetching profile:', error);
@@ -141,6 +154,8 @@ export default function App() {
           if (!isPremium) {
             const newCount = usageCount + 1;
             setUsageCount(newCount);
+            
+            // Optimistic update locally
             
             await supabase
               .from('profiles')
