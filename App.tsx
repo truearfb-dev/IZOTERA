@@ -237,19 +237,39 @@ export default function App() {
 
       <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24">
         {appState === AppState.SetupRequired && (
-          <div className="glass-panel p-8 rounded-2xl max-w-md text-center border-amber-500/30">
+          <div className="glass-panel p-8 rounded-2xl max-w-md text-center border-amber-500/30 animate-[fadeIn_0.5s_ease-out]">
             <div className="text-4xl mb-4">⚙️</div>
-            <h2 className="text-xl font-mystic text-amber-100 mb-4">Требуется Настройка</h2>
-            <p className="text-purple-200 text-sm mb-4">
-              Приложение не видит ключи доступа к базе данных и AI.
+            <h2 className="text-xl font-mystic text-amber-100 mb-4">Настройка Вселенной</h2>
+            <p className="text-purple-200 text-sm mb-6">
+              Приложение не может подключиться к энергетическим потокам (API ключи не найдены).
             </p>
-            <div className="text-left bg-black/30 p-4 rounded text-xs font-mono text-gray-400 mb-4">
-              1. Создайте файл <strong>.env</strong><br/>
-              2. Скопируйте содержимое из <strong>env.example</strong><br/>
-              3. Вставьте свои ключи.<br/>
-              4. Перезапустите терминал.
+            
+            <div className="text-left space-y-4">
+              <div className="bg-black/30 p-4 rounded-lg border border-white/5">
+                <p className="text-xs uppercase text-amber-500/70 mb-2 font-bold tracking-wider">Local Development</p>
+                <p className="text-xs text-gray-400 font-mono">
+                  Создайте файл <span className="text-white">.env</span> и добавьте ключи из <span className="text-white">env.example</span>.
+                </p>
+              </div>
+
+              <div className="bg-black/30 p-4 rounded-lg border border-white/5">
+                <p className="text-xs uppercase text-amber-500/70 mb-2 font-bold tracking-wider">Vercel / Production</p>
+                <p className="text-xs text-gray-400 font-mono">
+                  Перейдите в <span className="text-white">Settings → Environment Variables</span> и добавьте:
+                </p>
+                <ul className="text-[10px] text-gray-500 mt-2 font-mono list-disc list-inside">
+                  <li>VITE_SUPABASE_URL</li>
+                  <li>VITE_SUPABASE_ANON_KEY</li>
+                  <li>API_KEY</li>
+                </ul>
+              </div>
             </div>
-            <p className="text-xs text-amber-500/50 uppercase tracking-widest">Ожидание конфигурации...</p>
+            
+            <div className="mt-6 pt-4 border-t border-white/10">
+               <p className="text-[10px] text-amber-500/50 uppercase tracking-widest animate-pulse">
+                 Ожидание синхронизации...
+               </p>
+            </div>
           </div>
         )}
 
