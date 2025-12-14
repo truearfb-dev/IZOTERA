@@ -3,25 +3,59 @@ import { Onboarding } from './components/Onboarding';
 import { MagicLoader } from './components/MagicLoader';
 import { NatalCard } from './components/NatalCard';
 import { InstallPrompt } from './components/InstallPrompt';
+import { Paywall } from './components/Paywall';
 import { UserData, DailyPrediction } from './types';
 import { generatePrediction } from './utils/astrology';
 
 enum AppState {
   Onboarding,
+  Paywall, // New state
   Loading,
   Result,
   Error
 }
+
+const MAX_FREE_PREDICTIONS = 3;
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>(AppState.Onboarding);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  // Usage Tracking State
+  const [usageCount, setUsageCount] = useState(0);
+  const [isPremium, setIsPremium] = useState(false);
+
+  // Load persistent state on mount
+  useEffect(() => {
+    const savedCount = localStorage.getItem('aetheria_usage_count');
+    const savedPremium = localStorage.getItem('aetheria_is_premium');
+    
+    if (savedCount) setUsageCount(parseInt(savedCount, 10));
+    if (savedPremium === 'true') setIsPremium(true);
+  }, []);
 
   const handleOnboardingComplete = (data: UserData) => {
     setUserData(data);
-    setAppState(AppState.Loading);
+    
+    // Check limits
+    if (!isPremium && usageCount >= MAX_FREE_PREDICTIONS) {
+      setAppState(AppState.Paywall);
+    } else {
+      setAppState(AppState.Loading);
+    }
+  };
+
+  const handleUnlockPremium = () => {
+    setIsPremium(true);
+    localStorage.setItem('aetheria_is_premium', 'true');
+    // If they were trying to get a result, proceed to loading
+    if (userData) {
+      setAppState(AppState.Loading);
+    } else {
+      setAppState(AppState.Onboarding);
+    }
   };
 
   useEffect(() => {
@@ -31,6 +65,14 @@ export default function App() {
           const result = await generatePrediction(userData);
           setPrediction(result);
           setAppState(AppState.Result);
+          
+          // Increment usage count ONLY on success
+          if (!isPremium) {
+            const newCount = usageCount + 1;
+            setUsageCount(newCount);
+            localStorage.setItem('aetheria_usage_count', newCount.toString());
+          }
+          
         } catch (error: any) {
           console.error("Failed to generate prediction:", error);
           setErrorMessage(error.message || "Космическая связь была прервана.");
@@ -40,7 +82,7 @@ export default function App() {
       
       fetchPrediction();
     }
-  }, [appState, userData]);
+  }, [appState, userData, isPremium, usageCount]);
 
   const handleReset = () => {
     setAppState(AppState.Onboarding);
@@ -58,11 +100,22 @@ export default function App() {
         <h1 className="text-2xl md:text-4xl font-mystic tracking-[0.5em] text-amber-500/80 uppercase text-center drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">
           Aetheria
         </h1>
+        
+        {/* Optional: Usage Indicator for non-premium users */}
+        {!isPremium && usageCount < MAX_FREE_PREDICTIONS && (
+           <div className="absolute right-4 top-6 text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
+             {usageCount}/{MAX_FREE_PREDICTIONS} Free
+           </div>
+        )}
       </header>
 
       <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24">
         {appState === AppState.Onboarding && (
           <Onboarding onComplete={handleOnboardingComplete} />
+        )}
+        
+        {appState === AppState.Paywall && (
+          <Paywall onUnlock={handleUnlockPremium} />
         )}
         
         {appState === AppState.Loading && (

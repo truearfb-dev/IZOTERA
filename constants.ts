@@ -35,6 +35,15 @@ export const TRANSLATIONS = {
   love: "Любовь",
   career: "Карьера",
   vitality: "Жизненная сила",
+  // Paywall
+  paywallTitle: "Вселенная требует обмена",
+  paywallDesc: "Вы использовали 3 бесплатных предсказания. Чтобы продолжить получать мудрость звезд, откройте доступ к безграничному источнику.",
+  premiumBenefit1: "Безлимитные ежедневные прогнозы",
+  premiumBenefit2: "Расширенный анализ совместимости (Скоро)",
+  premiumBenefit3: "Личный AI-астролог 24/7 (Скоро)",
+  subscribeAction: "Открыть доступ за 299₽ / мес",
+  restorePurchase: "Восстановить покупки",
+  
   // Feelings
   [Feeling.Lost]: "Потерянность",
   [Feeling.Energetic]: "Энергичность",
