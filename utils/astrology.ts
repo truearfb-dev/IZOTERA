@@ -26,35 +26,35 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
 // --- Демонстрационный Режим (Симуляция) ---
 
 const getMockPrediction = (userData: UserData): DailyPrediction => {
-  // Генерация псевдо-случайного ответа на основе имени и даты, чтобы он был стабильным для пользователя сегодня
+  // Генерация псевдо-случайного ответа на основе имени и даты
   const seed = userData.name.length + new Date().getDate();
   
   const headlines = [
-    "Эхо Древних Звезд",
-    "Резонанс Эфира",
-    "Шепот Вселенной",
-    "Гармония Сфер",
-    "Путь Света",
-    "Зеркало Судьбы",
-    "Танец Планет"
+    "Время действовать",
+    "Фокус на главном",
+    "День планирования",
+    "Важный разговор",
+    "Эмоциональный баланс",
+    "Новые возможности",
+    "Время для отдыха"
   ];
   
   const insights = [
-    "Звезды указывают на скрытый потенциал. Ваша энергия сегодня способна менять реальность, если вы направите её в созидательное русло. Слушайте тишину.",
-    "Сегодня день внутренней алхимии. То, что казалось свинцом, может стать золотом, если вы проявите терпение и мудрость. Не торопите события.",
-    "Ветры перемен касаются вашего лица. Не бойтесь поднять паруса, даже если карта маршрута еще не до конца ясна. Доверьтесь потоку.",
-    "Тишина — это тоже ответ. В паузах между действиями сегодня скрывается больше смысла, чем в самой суете. Найдите время для созерцания.",
-    "Ваша аура сияет особенно ярко. Это время для того, чтобы делиться светом с другими, не ожидая ничего взамен. Вселенная вернет сторицей.",
-    "Обратите внимание на знаки. Случайная встреча или забытая мелодия могут содержать ключ к вопросу, который давно вас волнует."
+    "Сегодня отличный день для завершения старых дел. Не беритесь за новое, пока не разберетесь с \"хвостами\". Ваша продуктивность сейчас на пике.",
+    "Звезды советуют обратить внимание на финансы. Возможно, стоит пересмотреть бюджет или отложить крупную покупку на пару дней.",
+    "В отношениях возможны небольшие разногласия. Постарайтесь слушать больше, чем говорить, и не принимайте критику близко к сердцу.",
+    "Ваша энергия сегодня стабильна. Хорошее время для спорта или физической активности. Это поможет прочистить мысли.",
+    "Интуиция подскажет правильное решение в рабочем вопросе. Доверяйте первому впечатлению, оно сегодня самое верное.",
+    "Сделайте паузу. Вы много работали в последнее время, организму требуется перезагрузка. Вечер лучше провести в спокойной обстановке."
   ];
 
   const colors = [
-    { name: "Astral Gold", hex: "#FFD700" },
-    { name: "Mystic Purple", hex: "#8A2BE2" },
-    { name: "Nebula Blue", hex: "#483D8B" },
-    { name: "Cosmic Silver", hex: "#C0C0C0" },
-    { name: "Ethereal Teal", hex: "#008080" },
-    { name: "Crimson Void", hex: "#DC143C" }
+    { name: "Золотистый", hex: "#FFD700" },
+    { name: "Темно-синий", hex: "#1e3a8a" },
+    { name: "Изумрудный", hex: "#047857" },
+    { name: "Серый металлик", hex: "#9ca3af" },
+    { name: "Бордовый", hex: "#9f1239" },
+    { name: "Бежевый", hex: "#d6d3d1" }
   ];
 
   const getSeeded = (arr: any[]) => arr[seed % arr.length];
@@ -64,7 +64,7 @@ const getMockPrediction = (userData: UserData): DailyPrediction => {
 
   return {
     headline: headline,
-    insight: insight + " (Примечание: Включен режим симуляции, так как связь с API нестабильна)",
+    insight: insight + " (Примечание: Демо-режим. Проверьте соединение с сетью).",
     powerColor: color.name,
     powerColorHex: color.hex,
     stats: {
@@ -81,7 +81,6 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
   // Retrieve Key
   const apiKey = process.env.API_KEY;
   
-  // Если ключа нет вообще — сразу демо режим, без ошибки, чтобы не блокировать UI
   if (!apiKey) {
     console.warn("API Key отсутствует. Включаю режим симуляции.");
     return getMockPrediction(userData);
@@ -91,17 +90,22 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
   
   console.log("Generating prediction for:", userData.name);
 
+  // CHANGED PROMPT TO "MODERN PRACTICAL ASTROLOGER"
   const prompt = `
-    Role: Mystical Astrologer.
+    Role: Modern Psychological Astrologer & Life Coach.
     Target: ${userData.name}, Born: ${userData.dob} (${userData.tob}).
     Traits: ${userData.zodiacSign}, ${userData.element}, ${userData.archetype}.
     State: ${userData.feeling}.
     Language: Russian.
 
-    Generate a JSON response with:
-    - headline (mystical, max 6 words)
-    - insight (poetic advice, 2-3 sentences)
-    - powerColor (name)
+    Generate a JSON response for a daily horoscope.
+    Tone: Grounded, practical, psychological, realistic. Avoid mystical jargon, magic spells, or archaic fantasy language.
+    Focus on: Productivity, mental health, relationships, and actionable advice.
+
+    Structure:
+    - headline (concise, clear, max 6 words, e.g. "Focus on Career", "Watch your Health")
+    - insight (practical advice based on astrological energy, 2-3 sentences. Talk about real life situations.)
+    - powerColor (name in Russian)
     - powerColorHex (hex code)
     - stats (love, career, vitality as integers 0-100)
   `;
@@ -140,7 +144,6 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
       throw new Error("Empty response from stars");
     }
 
-    // Robust JSON extraction
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     const cleanJson = jsonMatch ? jsonMatch[0] : text;
 
@@ -154,9 +157,6 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
     console.error("Generation Error Full:", error);
     const msg = error.message || JSON.stringify(error);
 
-    // ВАЖНО: Если ключ отозван (403/Leaked) или лимиты исчерпаны, 
-    // мы НЕ роняем приложение, а отдаем симуляцию.
-    // Это позволит пользователю взаимодействовать с UI, пока он чинит ключ.
     if (
         msg.includes('403') || 
         msg.includes('leaked') || 
@@ -171,7 +171,6 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
        return getMockPrediction(userData);
     }
 
-    // Любая другая ошибка — тоже симуляция для стабильности
     return getMockPrediction(userData);
   }
 };
