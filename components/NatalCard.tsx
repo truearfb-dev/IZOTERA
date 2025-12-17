@@ -17,55 +17,63 @@ export const NatalCard: React.FC<Props> = ({ data, userData, onReset }) => {
   }, []);
 
   return (
-    <div className="w-full h-full flex flex-col justify-center animate-[fadeIn_0.8s_ease-out]">
-      <div className="glass-panel rounded-2xl overflow-hidden shadow-[0_0_30px_-10px_rgba(88,28,135,0.4)] border-amber-500/10 flex flex-col max-h-[85vh]">
+    <div className="w-full h-full flex flex-col justify-center animate-[fadeIn_0.5s_ease-out]">
+      <div className="glass-panel rounded-2xl overflow-hidden shadow-2xl border-slate-700/50 flex flex-col max-h-[85vh]">
         
-        {/* Header - Very Compact */}
-        <div className="relative p-5 text-center border-b border-white/5 shrink-0">
-          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent"></div>
-          <h3 className="text-purple-300/80 text-[10px] tracking-[0.3em] uppercase mb-1">
-            {t.dailyGuidance} {userData.name}
-          </h3>
-          <h1 className="text-xl md:text-3xl font-mystic text-amber-100 drop-shadow-md leading-tight">
+        {/* Header - Clean */}
+        <div className="p-6 border-b border-slate-700/50 bg-slate-800/30">
+          <div className="flex justify-between items-start mb-2">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-slate-400">
+                {new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </span>
+              <div 
+                 className="w-3 h-3 rounded-full shadow-sm" 
+                 style={{ backgroundColor: data.powerColorHex }}
+              ></div>
+          </div>
+          <h1 className="text-2xl font-bold text-white leading-tight">
             {data.headline}
           </h1>
         </div>
 
-        {/* Content Body - Scrollable if text is huge, but usually fits */}
-        <div className="p-5 flex flex-col gap-5 overflow-y-auto no-scrollbar">
+        {/* Content Body */}
+        <div className="p-6 flex flex-col gap-6 overflow-y-auto no-scrollbar">
             
-          {/* Main Insight - MOVED TOP to avoid "Empty Space" look */}
-          <div className="bg-black/20 p-4 rounded-xl border border-purple-500/10 animate-[slideUp_0.8s_ease-out_0.2s_both]">
-            <p className="text-base md:text-lg leading-relaxed text-purple-100 font-serif italic text-center text-pretty">
-              "{data.insight}"
-            </p>
+          {/* Insight Context */}
+          <div>
+             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Контекст дня</h3>
+             <p className="text-slate-200 text-sm leading-relaxed border-l-2 border-blue-500 pl-3">
+               {data.insight}
+             </p>
           </div>
 
-          {/* Stats Grid - Moved Down & Compacted */}
-          <div className="space-y-3">
-             <div className="grid grid-cols-3 gap-3">
-                <StatBar compact label={t.love} value={data.stats.love} color="bg-rose-500" delay={400} />
-                <StatBar compact label={t.career} value={data.stats.career} color="bg-emerald-500" delay={600} />
-                <StatBar compact label={t.vitality} value={data.stats.vitality} color="bg-amber-500" delay={800} />
-             </div>
+          {/* Action Plan - The "Simple Steps" */}
+          <div className="bg-slate-800/40 rounded-xl p-4 border border-slate-700/50">
+             <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">План действий</h3>
+             <ul className="space-y-3">
+               {data.actionPlan.map((step, idx) => (
+                 <li key={idx} className="flex items-start gap-3 animate-[slideUp_0.5s_ease-out_both]" style={{ animationDelay: `${idx * 150}ms` }}>
+                    <div className="mt-0.5 min-w-[20px] h-5 rounded-full border border-slate-600 flex items-center justify-center text-[10px] text-slate-400 font-mono">
+                      {idx + 1}
+                    </div>
+                    <span className="text-sm text-white">{step}</span>
+                 </li>
+               ))}
+             </ul>
+          </div>
+
+          {/* Stats Grid - Minimal */}
+          <div className="grid grid-cols-3 gap-4 py-2">
+             <StatBox label={t.statFocus} value={data.stats.focus} />
+             <StatBox label={t.statEnergy} value={data.stats.energy} />
+             <StatBox label={t.statMood} value={data.stats.mood} />
           </div>
 
           {/* Footer Info */}
-          <div className="flex justify-between items-center pt-2 border-t border-white/5 mt-auto shrink-0">
-            <div className="flex items-center gap-2">
-               <span className="text-purple-400 text-[10px] uppercase tracking-wider">{t.powerColor}</span>
-               <div className="flex items-center gap-2 group">
-                 <div 
-                    className="w-4 h-4 rounded-full shadow-[0_0_8px_currentColor]" 
-                    style={{ backgroundColor: data.powerColorHex, color: data.powerColorHex }}
-                 ></div>
-                 <span className="font-mystic text-xs text-amber-100">{data.powerColor}</span>
-               </div>
-            </div>
-            
+          <div className="flex justify-center pt-4 border-t border-slate-700/50 mt-auto">
             <button 
                 onClick={() => { playSound('click'); onReset(); }}
-                className="text-[10px] text-purple-400/70 hover:text-amber-200 uppercase tracking-widest border-b border-transparent hover:border-amber-200 transition-all"
+                className="text-xs font-medium text-slate-400 hover:text-white transition-colors"
             >
                 {t.readAnother}
             </button>
@@ -77,28 +85,9 @@ export const NatalCard: React.FC<Props> = ({ data, userData, onReset }) => {
   );
 };
 
-const StatBar: React.FC<{ label: string; value: number; color: string; delay: number; compact?: boolean }> = ({ label, value, color, delay, compact }) => {
-  const [width, setWidth] = React.useState(0);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-        setWidth(value);
-    }, delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return (
-    <div className="space-y-1 opacity-0 animate-[fadeIn_0.5s_ease-out_both]" style={{ animationDelay: `${delay-200}ms` }}>
-      <div className="flex justify-between text-[9px] uppercase tracking-wider text-purple-300/80">
-        <span>{label}</span>
-        <span>{width}%</span>
-      </div>
-      <div className={`${compact ? 'h-1' : 'h-1.5'} bg-gray-800/50 rounded-full overflow-hidden`}>
-        <div 
-          className={`h-full ${color} shadow-[0_0_8px_currentColor] transition-all duration-[1500ms] ease-out`} 
-          style={{ width: `${width}%` }}
-        ></div>
-      </div>
-    </div>
-  );
-};
+const StatBox: React.FC<{ label: string; value: number }> = ({ label, value }) => (
+  <div className="text-center p-2 rounded-lg bg-slate-800/30">
+    <div className="text-xl font-bold text-white mb-1">{value}%</div>
+    <div className="text-[10px] uppercase text-slate-500 font-medium">{label}</div>
+  </div>
+);

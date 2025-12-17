@@ -13,45 +13,30 @@ export enum ZodiacSign {
   Pisces = "Pisces"
 }
 
-export enum Feeling {
-  Lost = "Lost",
-  Energetic = "Energetic",
-  SeekingLove = "Seeking Love",
-  FocusOnMoney = "Focus on Money"
-}
-
-export enum Element {
-  Fire = "Fire",
-  Earth = "Earth",
-  Air = "Air",
-  Water = "Water"
-}
-
-export enum Archetype {
-  Warrior = "Warrior",
-  Healer = "Healer",
-  Sage = "Sage",
-  Creator = "Creator"
+export enum Focus {
+  Productivity = "Productivity",
+  Relationships = "Relationships",
+  Wellbeing = "Wellbeing",
+  Finance = "Finance"
 }
 
 export interface UserData {
   name: string;
   dob: string; // YYYY-MM-DD
   tob: string; // HH:MM
-  element: Element | null;
-  archetype: Archetype | null;
-  feeling: Feeling | null;
+  focus: Focus | null;
   zodiacSign?: ZodiacSign;
 }
 
 export interface DailyPrediction {
-  headline: string;
-  insight: string;
-  powerColor: string;
+  headline: string; // "Strategy for the day"
+  insight: string; // "General context"
+  actionPlan: string[]; // 3 bullet points
+  powerColor: string; // Kept as "Lucky Color" or similar
   powerColorHex: string;
   stats: {
-    love: number;
-    career: number;
-    vitality: number;
+    focus: number; // Replaces Career/Love/etc with generic productivity/energy metrics
+    energy: number;
+    mood: number;
   };
 }

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#050414" />
+    <meta name="theme-color" content="#0f172a" />
     
     <!-- PWA / Mobile Capable Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -12,30 +12,29 @@
     <meta name="apple-touch-fullscreen" content="yes">
     <meta name="format-detection" content="telephone=no">
     
-    <title>Aetheria | Daily Natal Guide</title>
+    <title>Aetheria | Daily Planner</title>
     
-    <link rel="icon" type="image/png" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png">
-    <link rel="apple-touch-icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png">
+    <link rel="icon" type="image/png" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4c5.png">
+    <link rel="apple-touch-icon" href="https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/1f4c5.png">
     
     <!-- Tailwind CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
-        --color-mystic-dark: #050414;
-        --color-mystic-purple: #1a1638;
+        --color-bg: #0f172a;
+        --color-card: #1e293b;
       }
       body {
-        /* Richer gradient for depth */
-        background: radial-gradient(circle at 50% 0%, #1a1b4b 0%, #050414 70%);
-        color: #e2e8f0;
-        font-family: 'Lato', sans-serif;
-        overflow: hidden; /* Disable body scroll strictly */
-        height: 100dvh;   /* Use dynamic viewport height */
+        background: #0f172a; /* Slate 900 - clean dark mode */
+        color: #f8fafc;
+        font-family: 'Inter', system-ui, sans-serif;
+        overflow: hidden;
+        height: 100dvh;
         width: 100vw;
-        position: fixed;  /* Prevent bounce effect on iOS */
+        position: fixed;
         overscroll-behavior: none;
         -webkit-tap-highlight-color: transparent;
       }
@@ -44,73 +43,42 @@
         width: 100%;
         overflow: hidden;
       }
+      
+      /* Re-mapping font-mystic to Inter for consistency without breaking code structure */
       h1, h2, h3, h4, .font-mystic {
-        font-family: 'Cinzel', serif;
+        font-family: 'Inter', system-ui, sans-serif;
+        letter-spacing: -0.02em;
+        font-weight: 600;
       }
       
-      /* Star background animation */
+      /* Subtle background noise instead of stars */
       .stars, .stars2 {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        width: 100%;
-        height: 100%;
-        display: block;
-        background: transparent url('https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png') repeat top center; 
-        z-index: -1;
-        pointer-events: none;
+        display: none; 
       }
       
-      .stars { background-size: 200px 200px; opacity: 0.15; animation: moveStars 100s linear infinite; }
-      .stars2 { background-size: 300px 300px; opacity: 0.1; animation: moveStars 150s linear infinite; }
-      
-      @keyframes moveStars {
-        from {background-position: 0 0;}
-        to {background-position: 0 10000px;}
-      }
-
-      @keyframes spin-slow {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-      }
-      .animate-spin-slow {
-        animation: spin-slow 12s linear infinite;
-      }
-      
-      @keyframes pulse-glow {
-        0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.2); }
-        50% { box-shadow: 0 0 25px rgba(168, 85, 247, 0.6); }
-      }
-      .animate-pulse-glow {
-        animation: pulse-glow 3s infinite;
-      }
-
-      /* Glassmorphism utilities - Darker and cleaner */
+      /* Clean Modern Card */
       .glass-panel {
-        background: rgba(13, 12, 34, 0.65); /* Slightly more transparent but darker */
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: rgba(30, 41, 59, 0.7); /* Slate-800 with opacity */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       }
       
-      /* Input styles */
+      /* Clean Input */
       .input-mystic {
-        background: rgba(255, 255, 255, 0.03);
+        background: rgba(15, 23, 42, 0.6);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(4px);
-        transition: all 0.3s ease;
+        border-radius: 0.5rem;
+        transition: all 0.2s ease;
       }
       .input-mystic:focus {
-        background: rgba(255, 255, 255, 0.07);
-        border-color: rgba(251, 191, 36, 0.5); /* Amber-400 */
+        background: rgba(15, 23, 42, 0.8);
+        border-color: #3b82f6; /* Blue-500 */
         outline: none;
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
       }
       
-      /* Utilities to hide scrollbar but allow scroll if absolutely needed internally */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
