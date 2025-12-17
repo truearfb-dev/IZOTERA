@@ -2,6 +2,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ZODIAC_DATES } from '../constants';
 import { UserData, ZodiacSign, DailyPrediction } from '../types';
 
+// --- Хелперы ---
+
 export const calculateZodiac = (dob: string): ZodiacSign => {
   if (!dob) return ZodiacSign.Aries;
   
@@ -21,22 +23,74 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
   return found ? found.sign : ZodiacSign.Capricorn; // Fallback
 };
 
+// --- Демонстрационный Режим (Симуляция) ---
+
+const getMockPrediction = (userData: UserData): DailyPrediction => {
+  // Генерация псевдо-случайного ответа на основе имени и даты, чтобы он был стабильным для пользователя сегодня
+  const seed = userData.name.length + new Date().getDate();
+  
+  const headlines = [
+    "Эхо Древних Звезд",
+    "Резонанс Эфира",
+    "Шепот Вселенной",
+    "Гармония Сфер",
+    "Путь Света",
+    "Зеркало Судьбы",
+    "Танец Планет"
+  ];
+  
+  const insights = [
+    "Звезды указывают на скрытый потенциал. Ваша энергия сегодня способна менять реальность, если вы направите её в созидательное русло. Слушайте тишину.",
+    "Сегодня день внутренней алхимии. То, что казалось свинцом, может стать золотом, если вы проявите терпение и мудрость. Не торопите события.",
+    "Ветры перемен касаются вашего лица. Не бойтесь поднять паруса, даже если карта маршрута еще не до конца ясна. Доверьтесь потоку.",
+    "Тишина — это тоже ответ. В паузах между действиями сегодня скрывается больше смысла, чем в самой суете. Найдите время для созерцания.",
+    "Ваша аура сияет особенно ярко. Это время для того, чтобы делиться светом с другими, не ожидая ничего взамен. Вселенная вернет сторицей.",
+    "Обратите внимание на знаки. Случайная встреча или забытая мелодия могут содержать ключ к вопросу, который давно вас волнует."
+  ];
+
+  const colors = [
+    { name: "Astral Gold", hex: "#FFD700" },
+    { name: "Mystic Purple", hex: "#8A2BE2" },
+    { name: "Nebula Blue", hex: "#483D8B" },
+    { name: "Cosmic Silver", hex: "#C0C0C0" },
+    { name: "Ethereal Teal", hex: "#008080" },
+    { name: "Crimson Void", hex: "#DC143C" }
+  ];
+
+  const getSeeded = (arr: any[]) => arr[seed % arr.length];
+  const color = getSeeded(colors);
+  const headline = getSeeded(headlines);
+  const insight = getSeeded(insights);
+
+  return {
+    headline: headline,
+    insight: insight + " (Примечание: Включен режим симуляции, так как связь с API нестабильна)",
+    powerColor: color.name,
+    powerColorHex: color.hex,
+    stats: {
+      love: 60 + (seed * 3 % 40),
+      career: 50 + (seed * 7 % 50),
+      vitality: 70 + (seed * 2 % 30),
+    }
+  };
+};
+
+// --- Основная функция ---
+
 export const generatePrediction = async (userData: UserData): Promise<DailyPrediction> => {
   // Retrieve Key
   const apiKey = process.env.API_KEY;
   
-  // Debug log (masked)
-  console.log("API Key present:", !!apiKey, apiKey ? `(Length: ${apiKey.length})` : "(Missing)");
-
+  // Если ключа нет вообще — сразу демо режим, без ошибки, чтобы не блокировать UI
   if (!apiKey) {
-    throw new Error("API Key отсутствует. Проверьте переменную VITE_GEMINI_API_KEY.");
+    console.warn("API Key отсутствует. Включаю режим симуляции.");
+    return getMockPrediction(userData);
   }
 
   const ai = new GoogleGenAI({ apiKey });
   
   console.log("Generating prediction for:", userData.name);
 
-  // Simplified prompt to reduce latency
   const prompt = `
     Role: Mystical Astrologer.
     Target: ${userData.name}, Born: ${userData.dob} (${userData.tob}).
@@ -81,10 +135,9 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
     });
 
     const text = response.text;
-    console.log("AI Response received (length):", text?.length);
 
     if (!text) {
-      throw new Error("Звезды молчат (пустой ответ от API).");
+      throw new Error("Empty response from stars");
     }
 
     // Robust JSON extraction
@@ -95,40 +148,30 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
       return JSON.parse(cleanJson) as DailyPrediction;
     } catch (e) {
       console.error("JSON Parse Error. Raw text:", text);
-      throw new Error("Не удалось расшифровать послание звезд (ошибка данных).");
+      return getMockPrediction(userData);
     }
   } catch (error: any) {
     console.error("Generation Error Full:", error);
-    
-    // Normalize error message to string
     const msg = error.message || JSON.stringify(error);
 
-    // Specific handling for "Leaked Key" or 403 Permission Denied
-    if (msg.includes('403') || msg.includes('leaked') || msg.includes('PERMISSION_DENIED')) {
-       throw new Error("Доступ к небесной канцелярии заблокирован. Ваш API ключ был отозван (Leaked Key). Пожалуйста, обновите конфигурацию.");
+    // ВАЖНО: Если ключ отозван (403/Leaked) или лимиты исчерпаны, 
+    // мы НЕ роняем приложение, а отдаем симуляцию.
+    // Это позволит пользователю взаимодействовать с UI, пока он чинит ключ.
+    if (
+        msg.includes('403') || 
+        msg.includes('leaked') || 
+        msg.includes('PERMISSION_DENIED') || 
+        msg.includes('API_KEY_INVALID') ||
+        msg.includes('400') ||
+        msg.includes('429') || 
+        msg.includes('500') ||
+        msg.includes('503')
+    ) {
+       console.warn("API Error detected. Activating Simulation Protocol.");
+       return getMockPrediction(userData);
     }
 
-    if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
-       throw new Error("Слишком много запросов к космосу. Эфир перегружен, попробуйте позже.");
-    }
-
-    if (msg.includes('400') || msg.includes('INVALID_ARGUMENT')) {
-       throw new Error("Ошибка в звездном запросе (400). Проверьте правильность настроек.");
-    }
-
-    // Attempt to extract clean message if the error is a raw JSON string
-    if (msg.trim().startsWith('{')) {
-        try {
-            const parsed = JSON.parse(msg);
-            if (parsed.error && parsed.error.message) {
-                 throw new Error(`Космическая ошибка: ${parsed.error.message}`);
-            }
-        } catch (e) {
-            // Failed to parse, fall through to generic error
-        }
-    }
-
-    // Generic fallback
-    throw new Error("Неведомая сила прервала связь. Попробуйте повторить ритуал позже.");
+    // Любая другая ошибка — тоже симуляция для стабильности
+    return getMockPrediction(userData);
   }
 };
