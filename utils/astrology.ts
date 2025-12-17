@@ -25,6 +25,7 @@ export const calculateZodiac = (dob: string): ZodiacSign => {
 // --- Демонстрационный Режим (Симуляция) ---
 
 const getMockPrediction = (userData: UserData): DailyPrediction => {
+  // Use seed to make stats semi-deterministic based on name/date
   const seed = userData.name.length + new Date().getDate();
   
   return {
@@ -38,9 +39,9 @@ const getMockPrediction = (userData: UserData): DailyPrediction => {
     powerColor: "Синий",
     powerColorHex: "#3b82f6",
     stats: {
-      focus: 85,
-      energy: 70,
-      mood: 65,
+      focus: 60 + (seed % 40),
+      energy: 50 + ((seed * 2) % 50),
+      mood: 40 + ((seed * 3) % 60),
     }
   };
 };

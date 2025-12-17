@@ -252,30 +252,31 @@ export default function App() {
   const handleHistorySelect = (pred: DailyPrediction) => {
       setPrediction(pred);
       if (!userData) {
-          setUserData({ name: "Traveler", dob: "", tob: "", element: null, archetype: null, feeling: null }); 
+          // Fix: Removed obsolete fields (element, archetype, feeling)
+          setUserData({ name: "Traveler", dob: "", tob: "", focus: null }); 
       }
       setAppState(AppState.Result);
   };
 
   return (
-    <div className="h-full w-full relative flex flex-col overflow-hidden bg-[#050414]">
+    <div className="h-full w-full relative flex flex-col overflow-hidden bg-[#0f172a]">
       {/* Background Layers */}
       <div className="stars fixed inset-0 pointer-events-none z-0"></div>
       <div className="stars2 fixed inset-0 pointer-events-none z-0"></div>
       
       {/* Header - Fixed & Static */}
-      <header className="fixed top-0 left-0 w-full z-50 p-4 h-16 flex items-center justify-center bg-gradient-to-b from-[#050414] via-[#050414]/90 to-transparent backdrop-blur-sm">
+      <header className="fixed top-0 left-0 w-full z-50 p-4 h-16 flex items-center justify-center bg-gradient-to-b from-[#0f172a] via-[#0f172a]/90 to-transparent backdrop-blur-sm">
         
         {/* Absolute Center Title Group */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center w-full pointer-events-none">
           <h1 
               onClick={() => { playSound('hover'); handleReset(); }}
-              className="pointer-events-auto text-2xl font-mystic tracking-[0.2em] text-amber-500 uppercase drop-shadow-[0_0_5px_rgba(245,158,11,0.5)] cursor-pointer hover:text-amber-400 transition-colors"
+              className="pointer-events-auto text-xl font-bold tracking-tight text-white cursor-pointer hover:text-blue-400 transition-colors"
           >
             Aetheria
           </h1>
-          <span className="text-[9px] text-amber-200/50 uppercase tracking-widest -mt-0.5">
-            Натальная карта на сегодня
+          <span className="text-[10px] text-slate-400 uppercase tracking-widest">
+            Daily Planner
           </span>
         </div>
         
@@ -285,14 +286,14 @@ export default function App() {
              {appState !== AppState.History && (
                  <button 
                     onClick={handleOpenHistory}
-                    className="text-amber-200/50 hover:text-amber-100 transition-colors"
+                    className="text-slate-400 hover:text-white transition-colors"
                  >
                     <span className="text-xl">📜</span>
                  </button>
              )}
           
              {!isPremium && session.user.id !== GUEST_ID && (
-               <div className="text-[9px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-0.5 rounded-full hidden sm:block">
+               <div className="text-[9px] text-slate-400 uppercase tracking-widest border border-slate-700 px-2 py-0.5 rounded-full hidden sm:block">
                  {usageCount}/{MAX_FREE_PREDICTIONS}
                </div>
              )}
@@ -306,7 +307,7 @@ export default function App() {
                  setAppState(AppState.Onboarding);
                  setUserData(null);
                }}
-               className="text-[10px] text-white/30 hover:text-white transition-colors uppercase tracking-wider"
+               className="text-[10px] text-slate-500 hover:text-white transition-colors uppercase tracking-wider"
              >
                Выйти
              </button>
@@ -319,8 +320,8 @@ export default function App() {
         <div className="w-full h-full flex flex-col items-center justify-center max-w-lg mx-auto">
           {appState === AppState.SetupRequired && (
             <div className="glass-panel p-6 rounded-2xl max-w-md text-center border-amber-500/30">
-              <h2 className="text-xl font-mystic text-amber-100 mb-2">Настройка</h2>
-              <p className="text-purple-200 text-sm">Проверьте VITE_GEMINI_API_KEY</p>
+              <h2 className="text-xl font-bold text-slate-100 mb-2">Настройка</h2>
+              <p className="text-slate-400 text-sm">Проверьте VITE_GEMINI_API_KEY</p>
             </div>
           )}
 
@@ -346,7 +347,6 @@ export default function App() {
           {appState === AppState.Result && userData && prediction && (
             <NatalCard 
               data={prediction} 
-              userData={userData}
               onReset={handleReset} 
             />
           )}
@@ -362,11 +362,11 @@ export default function App() {
           {appState === AppState.Error && (
             <div className="glass-panel rounded-2xl p-6 shadow-2xl text-center border-red-500/20 bg-red-900/10 w-full">
                <div className="text-3xl mb-2">🌑</div>
-               <h2 className="text-lg font-mystic text-red-200 mb-2">Космические Помехи</h2>
-               <p className="text-purple-200 text-sm mb-4">{errorMessage}</p>
+               <h2 className="text-lg font-bold text-red-200 mb-2">Ошибка сети</h2>
+               <p className="text-slate-300 text-sm mb-4">{errorMessage}</p>
                <div className="flex flex-col gap-2">
-                 <button onClick={handleRetry} className="px-6 py-2 rounded-lg bg-amber-600 text-white text-sm">Еще раз</button>
-                 <button onClick={handleReset} className="text-xs text-gray-500">Меню</button>
+                 <button onClick={handleRetry} className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm">Повторить</button>
+                 <button onClick={handleReset} className="text-xs text-slate-500">Меню</button>
                </div>
             </div>
           )}
@@ -375,7 +375,7 @@ export default function App() {
       
       <InstallPrompt />
       
-      <footer className="relative z-10 py-2 text-center text-purple-900/20 text-[10px] font-serif shrink-0">
+      <footer className="relative z-10 py-2 text-center text-slate-800 text-[10px] shrink-0">
         &copy; {new Date().getFullYear()} Aetheria.
       </footer>
     </div>

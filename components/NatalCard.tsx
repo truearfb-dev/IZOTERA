@@ -1,15 +1,15 @@
 import React, { useEffect } from 'react';
-import { UserData, DailyPrediction } from '../types';
+import { DailyPrediction } from '../types';
 import { TRANSLATIONS } from '../constants';
 import { playSound } from '../utils/sounds';
 
 interface Props {
   data: DailyPrediction;
-  userData: UserData;
+  // userData removed as it is not used in the UI
   onReset: () => void;
 }
 
-export const NatalCard: React.FC<Props> = ({ data, userData, onReset }) => {
+export const NatalCard: React.FC<Props> = ({ data, onReset }) => {
   const t = TRANSLATIONS;
 
   useEffect(() => {
