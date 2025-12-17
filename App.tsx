@@ -259,21 +259,29 @@ export default function App() {
 
   return (
     <div className="h-full w-full relative flex flex-col overflow-hidden bg-[#050414]">
-      {/* Background Layers - Removed the weird glow (radial gradient) */}
+      {/* Background Layers */}
       <div className="stars fixed inset-0 pointer-events-none z-0"></div>
       <div className="stars2 fixed inset-0 pointer-events-none z-0"></div>
       
       {/* Header - Fixed & Static */}
-      <header className="fixed top-0 left-0 w-full z-50 p-4 flex justify-between items-center bg-gradient-to-b from-[#050414] via-[#050414]/90 to-transparent backdrop-blur-sm">
-        <h1 
-            onClick={() => { playSound('hover'); handleReset(); }}
-            className="text-xl md:text-2xl font-mystic tracking-[0.2em] text-amber-500 uppercase drop-shadow-[0_0_5px_rgba(245,158,11,0.5)] cursor-pointer"
-        >
-          Aetheria
-        </h1>
+      <header className="fixed top-0 left-0 w-full z-50 p-4 h-16 flex items-center justify-center bg-gradient-to-b from-[#050414] via-[#050414]/90 to-transparent backdrop-blur-sm">
         
+        {/* Absolute Center Title Group */}
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center w-full pointer-events-none">
+          <h1 
+              onClick={() => { playSound('hover'); handleReset(); }}
+              className="pointer-events-auto text-2xl font-mystic tracking-[0.2em] text-amber-500 uppercase drop-shadow-[0_0_5px_rgba(245,158,11,0.5)] cursor-pointer hover:text-amber-400 transition-colors"
+          >
+            Aetheria
+          </h1>
+          <span className="text-[9px] text-amber-200/50 uppercase tracking-widest -mt-0.5">
+            Натальная карта на сегодня
+          </span>
+        </div>
+        
+        {/* Right Side Controls */}
         {session && (
-          <div className="flex items-center gap-3">
+          <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-3 z-50">
              {appState !== AppState.History && (
                  <button 
                     onClick={handleOpenHistory}
@@ -284,7 +292,7 @@ export default function App() {
              )}
           
              {!isPremium && session.user.id !== GUEST_ID && (
-               <div className="text-[9px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-0.5 rounded-full">
+               <div className="text-[9px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-0.5 rounded-full hidden sm:block">
                  {usageCount}/{MAX_FREE_PREDICTIONS}
                </div>
              )}

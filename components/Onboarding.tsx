@@ -72,8 +72,9 @@ export const Onboarding: React.FC<Props> = ({ onComplete }) => {
             </div>
             
             <div className="space-y-4 px-2">
-              <div className="text-left group">
-                <label className="text-[10px] text-amber-200/70 uppercase tracking-[0.2em] mb-1.5 block ml-1 group-focus-within:text-amber-400 transition-colors">
+              {/* Centered Name Input */}
+              <div className="text-center group">
+                <label className="text-[10px] text-amber-200/70 uppercase tracking-[0.2em] mb-1.5 block group-focus-within:text-amber-400 transition-colors">
                   {t.nameLabel}
                 </label>
                 <input
@@ -84,8 +85,10 @@ export const Onboarding: React.FC<Props> = ({ onComplete }) => {
                   placeholder={t.namePlaceholder}
                 />
               </div>
-              <div className="text-left group">
-                <label className="text-[10px] text-amber-200/70 uppercase tracking-[0.2em] mb-1.5 block ml-1 group-focus-within:text-amber-400 transition-colors">
+              
+              {/* Centered Date Input */}
+              <div className="text-center group">
+                <label className="text-[10px] text-amber-200/70 uppercase tracking-[0.2em] mb-1.5 block group-focus-within:text-amber-400 transition-colors">
                   {t.dobLabel}
                 </label>
                 <input
@@ -128,8 +131,9 @@ export const Onboarding: React.FC<Props> = ({ onComplete }) => {
                 </span>
               </div>
               
-              <div className="text-left group px-2">
-                 <label className="text-[10px] text-amber-200/70 uppercase tracking-[0.2em] mb-2 block text-center">
+              {/* Centered Time Input */}
+              <div className="text-center group px-2">
+                 <label className="text-[10px] text-amber-200/70 uppercase tracking-[0.2em] mb-2 block group-focus-within:text-amber-400 transition-colors">
                     {t.tobLabel}
                  </label>
                  <input
