@@ -28,8 +28,8 @@
         --color-mystic-purple: #1a1638;
       }
       body {
-        /* Deep dark background to remove 'hazy glow' */
-        background: #050414; 
+        /* Richer gradient for depth */
+        background: radial-gradient(circle at 50% 0%, #1a1b4b 0%, #050414 70%);
         color: #e2e8f0;
         font-family: 'Lato', sans-serif;
         overflow: hidden; /* Disable body scroll strictly */
@@ -89,10 +89,25 @@
 
       /* Glassmorphism utilities - Darker and cleaner */
       .glass-panel {
-        background: rgba(15, 12, 41, 0.7); /* Darker base */
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: rgba(13, 12, 34, 0.65); /* Slightly more transparent but darker */
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+      }
+      
+      /* Input styles */
+      .input-mystic {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(4px);
+        transition: all 0.3s ease;
+      }
+      .input-mystic:focus {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(251, 191, 36, 0.5); /* Amber-400 */
+        outline: none;
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.1);
       }
       
       /* Utilities to hide scrollbar but allow scroll if absolutely needed internally */
