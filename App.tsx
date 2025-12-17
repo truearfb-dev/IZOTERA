@@ -6,8 +6,11 @@ import { NatalCard } from './components/NatalCard';
 import { InstallPrompt } from './components/InstallPrompt';
 import { Paywall } from './components/Paywall';
 import { AuthModal } from './components/AuthModal';
+import { HistoryView } from './components/HistoryView';
 import { UserData, DailyPrediction } from './types';
 import { generatePrediction } from './utils/astrology';
+import { playSound } from './utils/sounds';
+import { TRANSLATIONS } from './constants';
 
 enum AppState {
   SetupRequired,
@@ -16,7 +19,8 @@ enum AppState {
   Paywall,
   Loading,
   Result,
-  Error
+  Error,
+  History
 }
 
 const MAX_FREE_PREDICTIONS = 3;
@@ -27,6 +31,9 @@ export default function App() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [prediction, setPrediction] = useState<DailyPrediction | null>(null);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  // History State
+  const [history, setHistory] = useState<{date: string, prediction: DailyPrediction}[]>([]);
   
   // Supabase State
   const [session, setSession] = useState<any>(null);
@@ -66,11 +73,33 @@ export default function App() {
   useEffect(() => {
     if (session) {
       fetchProfile();
+      loadHistory();
     } else {
       setUsageCount(0);
       setIsPremium(false);
+      // Load local history for guest/unauth
+      const local = localStorage.getItem('aetheria_history');
+      if (local) setHistory(JSON.parse(local));
     }
   }, [session]);
+
+  const loadHistory = () => {
+    // For now, we sync with local storage for simplicity in this demo environment, 
+    // but in production this would query a 'predictions' table.
+    // If we had the table: const { data } = await supabase.from('predictions').select('*').eq('user_id', session.user.id);
+    const local = localStorage.getItem(`history_${session?.user?.id || 'guest'}`);
+    if (local) setHistory(JSON.parse(local));
+  };
+
+  const saveToHistory = (pred: DailyPrediction) => {
+    const newItem = { date: new Date().toISOString(), prediction: pred };
+    const newHistory = [newItem, ...history];
+    setHistory(newHistory);
+    
+    // Save locally
+    const key = session ? `history_${session.user.id}` : 'aetheria_history';
+    localStorage.setItem(key, JSON.stringify(newHistory));
+  };
 
   // Safety Timeout for Loading State
   useEffect(() => {
@@ -132,6 +161,7 @@ export default function App() {
   };
 
   const handleOnboardingComplete = (data: UserData) => {
+    playSound('click');
     setUserData(data);
     if (!session) {
       setAppState(AppState.Auth);
@@ -151,6 +181,7 @@ export default function App() {
   };
 
   const handleAuthSuccess = async () => {
+    playSound('success');
     await fetchProfile();
     if (userData) {
       checkLimitsAndProceed();
@@ -160,6 +191,7 @@ export default function App() {
   };
   
   const handleGuestAccess = () => {
+    playSound('click');
     // Create a fake session for Guest Mode
     const guestSession = {
       user: { id: GUEST_ID, email: 'guest@aetheria.void' },
@@ -173,6 +205,7 @@ export default function App() {
   };
 
   const handleUnlockPremium = async () => {
+    playSound('success');
     setIsPremium(true); 
     if (userData) {
       setAppState(AppState.Loading);
@@ -187,9 +220,11 @@ export default function App() {
       const fetchPrediction = async () => {
         try {
           console.log("Starting prediction generation...");
+          playSound('reveal');
           const result = await generatePrediction(userData);
           console.log("Prediction generated successfully");
           setPrediction(result);
+          saveToHistory(result); // Save to log
           setAppState(AppState.Result);
           
           // Only update DB if it's a real user, not a guest
@@ -230,30 +265,62 @@ export default function App() {
     setErrorMessage('');
     setAppState(AppState.Loading);
   };
+  
+  const handleOpenHistory = () => {
+      playSound('click');
+      setAppState(AppState.History);
+  };
+
+  const handleHistorySelect = (pred: DailyPrediction) => {
+      setPrediction(pred);
+      // Need userData to be valid to show NatalCard? 
+      // Ideally we store userData with history too, but for now we'll mock it if missing or rely on current.
+      if (!userData) {
+          setUserData({ name: "Traveler", dob: "", tob: "", element: null, archetype: null, feeling: null }); 
+      }
+      setAppState(AppState.Result);
+  };
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col">
+    <div className="min-h-screen w-full relative flex flex-col overflow-hidden">
+      {/* RESTORED BACKGROUND LAYERS */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#0f0c29_90%)] z-0"></div>
-
+      <div className="stars fixed inset-0 pointer-events-none z-0"></div>
+      <div className="stars2 fixed inset-0 pointer-events-none z-0"></div>
+      
       <header className="relative z-10 p-6 flex justify-between items-center max-w-4xl mx-auto w-full">
-        <h1 className="text-2xl md:text-3xl font-mystic tracking-[0.3em] text-amber-500/80 uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.3)]">
+        <h1 
+            onClick={() => { playSound('hover'); handleReset(); }}
+            className="text-2xl md:text-3xl font-mystic tracking-[0.3em] text-amber-500/80 uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.3)] cursor-pointer hover:text-amber-400 transition-colors"
+        >
           Aetheria
         </h1>
         
         {session && (
           <div className="flex items-center gap-4">
+             {/* History Button */}
+             {appState !== AppState.History && (
+                 <button 
+                    onClick={handleOpenHistory}
+                    className="text-xs text-amber-200/50 hover:text-amber-100 transition-colors uppercase tracking-widest flex items-center gap-1"
+                 >
+                    <span className="text-lg">📜</span> <span className="hidden md:inline">{TRANSLATIONS.openHistory}</span>
+                 </button>
+             )}
+          
              {!isPremium && session.user.id !== GUEST_ID && (
-               <div className="text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
+               <div className="hidden md:block text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
                  {usageCount}/{MAX_FREE_PREDICTIONS} Free
                </div>
              )}
              {session.user.id === GUEST_ID && (
-               <div className="text-[10px] text-amber-300/50 uppercase tracking-widest border border-amber-500/20 px-2 py-1 rounded-full">
+               <div className="hidden md:block text-[10px] text-amber-300/50 uppercase tracking-widest border border-amber-500/20 px-2 py-1 rounded-full">
                  Guest
                </div>
              )}
              <button 
                onClick={() => {
+                 playSound('click');
                  if (session.user.id !== GUEST_ID) {
                     supabase.auth.signOut(); 
                  }
@@ -269,7 +336,7 @@ export default function App() {
         )}
       </header>
 
-      <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24">
+      <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24 w-full">
         {appState === AppState.SetupRequired && (
           <div className="glass-panel p-8 rounded-2xl max-w-md text-center border-amber-500/30 animate-[fadeIn_0.5s_ease-out]">
             <div className="text-4xl mb-4">⚙️</div>
@@ -290,12 +357,6 @@ export default function App() {
                   <li className="text-amber-300">VITE_GEMINI_API_KEY</li>
                 </ul>
               </div>
-            </div>
-            
-            <div className="mt-6 pt-4 border-t border-white/10">
-               <p className="text-[10px] text-amber-500/50 uppercase tracking-widest animate-pulse">
-                 После изменения ключей сделайте Redeploy
-               </p>
             </div>
           </div>
         )}
@@ -326,6 +387,14 @@ export default function App() {
             onReset={handleReset} 
           />
         )}
+        
+        {appState === AppState.History && (
+          <HistoryView 
+            history={history}
+            onSelect={handleHistorySelect}
+            onBack={() => setAppState(userData && prediction ? AppState.Result : AppState.Onboarding)}
+          />
+        )}
 
         {appState === AppState.Error && (
           <div className="w-full max-w-md mx-auto p-6 animate-[fadeIn_1s_ease-out]">
@@ -334,7 +403,7 @@ export default function App() {
                <h2 className="text-2xl font-mystic text-red-200 mb-4 uppercase tracking-widest">
                  Космические Помехи
                </h2>
-               <p className="text-purple-200 mb-6 font-serif italic">
+               <p className="text-purple-200 mb-6 font-serif italic break-words">
                  {errorMessage}
                </p>
                <div className="flex flex-col gap-3">

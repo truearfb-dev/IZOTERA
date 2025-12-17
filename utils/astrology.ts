@@ -99,12 +99,36 @@ export const generatePrediction = async (userData: UserData): Promise<DailyPredi
     }
   } catch (error: any) {
     console.error("Generation Error Full:", error);
-    if (error.message?.includes('429')) {
-       throw new Error("Слишком много запросов к космосу. Попробуйте позже.");
+    
+    // Normalize error message to string
+    const msg = error.message || JSON.stringify(error);
+
+    // Specific handling for "Leaked Key" or 403 Permission Denied
+    if (msg.includes('403') || msg.includes('leaked') || msg.includes('PERMISSION_DENIED')) {
+       throw new Error("Доступ к небесной канцелярии заблокирован. Ваш API ключ был отозван (Leaked Key). Пожалуйста, обновите конфигурацию.");
     }
-    if (error.message?.includes('400')) {
-       throw new Error("Ошибка запроса к звездам (400). Проверьте ключ.");
+
+    if (msg.includes('429') || msg.includes('RESOURCE_EXHAUSTED')) {
+       throw new Error("Слишком много запросов к космосу. Эфир перегружен, попробуйте позже.");
     }
-    throw error;
+
+    if (msg.includes('400') || msg.includes('INVALID_ARGUMENT')) {
+       throw new Error("Ошибка в звездном запросе (400). Проверьте правильность настроек.");
+    }
+
+    // Attempt to extract clean message if the error is a raw JSON string
+    if (msg.trim().startsWith('{')) {
+        try {
+            const parsed = JSON.parse(msg);
+            if (parsed.error && parsed.error.message) {
+                 throw new Error(`Космическая ошибка: ${parsed.error.message}`);
+            }
+        } catch (e) {
+            // Failed to parse, fall through to generic error
+        }
+    }
+
+    // Generic fallback
+    throw new Error("Неведомая сила прервала связь. Попробуйте повторить ритуал позже.");
   }
 };

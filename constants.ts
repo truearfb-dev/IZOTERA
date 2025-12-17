@@ -31,10 +31,16 @@ export const TRANSLATIONS = {
   // Card
   dailyGuidance: "Дневное руководство для",
   powerColor: "Цвет силы:",
-  readAnother: "Прочитать другую душу",
+  readAnother: "Спросить звезды снова",
   love: "Любовь",
   career: "Карьера",
   vitality: "Жизненная сила",
+  // History
+  historyTitle: "Гримуар Судеб",
+  historyEmpty: "Страницы пусты. Звезды еще не шептали вам.",
+  back: "Назад",
+  openHistory: "Гримуар",
+  
   // Paywall
   paywallTitle: "Вселенная требует обмена",
   paywallDesc: "Вы использовали 3 бесплатных предсказания. Чтобы продолжить получать мудрость звезд, откройте доступ к безграничному источнику.",
