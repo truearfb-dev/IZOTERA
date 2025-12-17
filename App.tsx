@@ -84,9 +84,6 @@ export default function App() {
   }, [session]);
 
   const loadHistory = () => {
-    // For now, we sync with local storage for simplicity in this demo environment, 
-    // but in production this would query a 'predictions' table.
-    // If we had the table: const { data } = await supabase.from('predictions').select('*').eq('user_id', session.user.id);
     const local = localStorage.getItem(`history_${session?.user?.id || 'guest'}`);
     if (local) setHistory(JSON.parse(local));
   };
@@ -96,7 +93,6 @@ export default function App() {
     const newHistory = [newItem, ...history];
     setHistory(newHistory);
     
-    // Save locally
     const key = session ? `history_${session.user.id}` : 'aetheria_history';
     localStorage.setItem(key, JSON.stringify(newHistory));
   };
@@ -105,7 +101,6 @@ export default function App() {
   useEffect(() => {
     let timeout: ReturnType<typeof setTimeout>;
     if (appState === AppState.Loading) {
-      // If stuck in loading for more than 60 seconds (increased from 25), force error
       timeout = setTimeout(() => {
         setErrorMessage("Звезды сегодня задумчивы. Время ожидания истекло.");
         setAppState(AppState.Error);
@@ -117,7 +112,6 @@ export default function App() {
   const fetchProfile = async () => {
     if (!session) return;
     
-    // Guest bypass
     if (session.user.id === GUEST_ID) {
       setUsageCount(0);
       setIsPremium(false);
@@ -132,9 +126,7 @@ export default function App() {
         .eq('id', session.user.id)
         .single();
       
-      // Self-healing: If profile missing (PGRST116), try to create it manually
       if (error && error.code === 'PGRST116') {
-         console.log("Profile missing, attempting fallback creation...");
          const { data: newData, error: insertError } = await supabase
             .from('profiles')
             .insert([{ id: session.user.id, free_usage_count: 0, is_premium: false }])
@@ -147,9 +139,7 @@ export default function App() {
          }
       }
         
-      if (error) {
-        console.error('Error fetching profile:', error);
-      } else if (data) {
+      if (data) {
         setUsageCount(data.free_usage_count || 0);
         setIsPremium(data.is_premium || false);
       }
@@ -192,13 +182,11 @@ export default function App() {
   
   const handleGuestAccess = () => {
     playSound('click');
-    // Create a fake session for Guest Mode
     const guestSession = {
       user: { id: GUEST_ID, email: 'guest@aetheria.void' },
       access_token: 'guest-token',
     };
     setSession(guestSession);
-    // Proceed immediately
     if (userData) {
        setAppState(AppState.Loading);
     }
@@ -214,25 +202,19 @@ export default function App() {
     }
   };
 
-  // Main Generation Effect
   useEffect(() => {
     if (appState === AppState.Loading && userData && session) {
       const fetchPrediction = async () => {
         try {
-          console.log("Starting prediction generation...");
           playSound('reveal');
           const result = await generatePrediction(userData);
-          console.log("Prediction generated successfully");
           setPrediction(result);
-          saveToHistory(result); // Save to log
+          saveToHistory(result);
           setAppState(AppState.Result);
           
-          // Only update DB if it's a real user, not a guest
           if (!isPremium && session.user.id !== GUEST_ID) {
             const newCount = usageCount + 1;
             setUsageCount(newCount);
-            
-            // Optimistic update locally
             await supabase
               .from('profiles')
               .update({ free_usage_count: newCount })
@@ -240,7 +222,6 @@ export default function App() {
           }
           
         } catch (error: any) {
-          console.error("Failed to generate prediction:", error);
           setErrorMessage(error.message || "Космическая связь была прервана.");
           setAppState(AppState.Error);
         }
@@ -248,8 +229,6 @@ export default function App() {
       
       fetchPrediction();
     } else if (appState === AppState.Loading && !userData) {
-        // Edge case: Loading state but data lost (e.g. refresh)
-        console.warn("Loading state active but userData is missing. Resetting to Onboarding.");
         setAppState(AppState.Onboarding);
     }
   }, [appState, userData, session, isPremium]);
@@ -273,8 +252,6 @@ export default function App() {
 
   const handleHistorySelect = (pred: DailyPrediction) => {
       setPrediction(pred);
-      // Need userData to be valid to show NatalCard? 
-      // Ideally we store userData with history too, but for now we'll mock it if missing or rely on current.
       if (!userData) {
           setUserData({ name: "Traveler", dob: "", tob: "", element: null, archetype: null, feeling: null }); 
       }
@@ -282,40 +259,35 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full relative flex flex-col overflow-hidden">
-      {/* RESTORED BACKGROUND LAYERS */}
+    <div className="h-full w-full relative flex flex-col overflow-hidden">
+      {/* Background Layers */}
       <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#0f0c29_90%)] z-0"></div>
       <div className="stars fixed inset-0 pointer-events-none z-0"></div>
       <div className="stars2 fixed inset-0 pointer-events-none z-0"></div>
       
-      <header className="relative z-10 p-6 flex justify-between items-center max-w-4xl mx-auto w-full">
+      {/* Header - Compact */}
+      <header className="relative z-10 p-3 md:p-5 flex justify-between items-center max-w-4xl mx-auto w-full shrink-0">
         <h1 
             onClick={() => { playSound('hover'); handleReset(); }}
-            className="text-2xl md:text-3xl font-mystic tracking-[0.3em] text-amber-500/80 uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.3)] cursor-pointer hover:text-amber-400 transition-colors"
+            className="text-xl md:text-2xl font-mystic tracking-[0.2em] text-amber-500/80 uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.3)] cursor-pointer hover:text-amber-400 transition-colors"
         >
           Aetheria
         </h1>
         
         {session && (
-          <div className="flex items-center gap-4">
-             {/* History Button */}
+          <div className="flex items-center gap-3">
              {appState !== AppState.History && (
                  <button 
                     onClick={handleOpenHistory}
                     className="text-xs text-amber-200/50 hover:text-amber-100 transition-colors uppercase tracking-widest flex items-center gap-1"
                  >
-                    <span className="text-lg">📜</span> <span className="hidden md:inline">{TRANSLATIONS.openHistory}</span>
+                    <span className="text-lg">📜</span>
                  </button>
              )}
           
              {!isPremium && session.user.id !== GUEST_ID && (
-               <div className="hidden md:block text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
+               <div className="text-[9px] md:text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
                  {usageCount}/{MAX_FREE_PREDICTIONS} Free
-               </div>
-             )}
-             {session.user.id === GUEST_ID && (
-               <div className="hidden md:block text-[10px] text-amber-300/50 uppercase tracking-widest border border-amber-500/20 px-2 py-1 rounded-full">
-                 Guest
                </div>
              )}
              <button 
@@ -336,99 +308,69 @@ export default function App() {
         )}
       </header>
 
-      <main className="relative z-10 flex-grow flex items-center justify-center p-4 pb-24 w-full">
-        {appState === AppState.SetupRequired && (
-          <div className="glass-panel p-8 rounded-2xl max-w-md text-center border-amber-500/30 animate-[fadeIn_0.5s_ease-out]">
-            <div className="text-4xl mb-4">⚙️</div>
-            <h2 className="text-xl font-mystic text-amber-100 mb-4">Настройка Вселенной</h2>
-            <p className="text-purple-200 text-sm mb-6">
-              Приложение не может подключиться к энергетическим потокам.
-            </p>
-            
-            <div className="text-left space-y-4">
-              <div className="bg-black/30 p-4 rounded-lg border border-white/5">
-                <p className="text-xs uppercase text-amber-500/70 mb-2 font-bold tracking-wider">Vercel Configuration</p>
-                <p className="text-xs text-gray-400 font-mono mb-2">
-                   Убедитесь, что переменная называется <code>VITE_GEMINI_API_KEY</code>.
-                </p>
-                <ul className="text-[10px] text-gray-500 font-mono list-disc list-inside">
-                  <li>VITE_SUPABASE_URL</li>
-                  <li>VITE_SUPABASE_ANON_KEY</li>
-                  <li className="text-amber-300">VITE_GEMINI_API_KEY</li>
-                </ul>
-              </div>
+      {/* Main Content Area - Scrollable internally if needed, but mostly fitted */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-2 w-full overflow-hidden">
+        <div className="w-full h-full flex flex-col items-center justify-center max-w-lg mx-auto">
+          {appState === AppState.SetupRequired && (
+            <div className="glass-panel p-6 rounded-2xl max-w-md text-center border-amber-500/30">
+              <h2 className="text-xl font-mystic text-amber-100 mb-2">Настройка</h2>
+              <p className="text-purple-200 text-sm">Проверьте VITE_GEMINI_API_KEY</p>
             </div>
-          </div>
-        )}
+          )}
 
-        {appState === AppState.Onboarding && (
-          <Onboarding onComplete={handleOnboardingComplete} />
-        )}
-        
-        {appState === AppState.Auth && (
-          <AuthModal 
-            onSuccess={handleAuthSuccess} 
-            onGuestAccess={handleGuestAccess}
-          />
-        )}
-        
-        {appState === AppState.Paywall && (
-          <Paywall onUnlock={handleUnlockPremium} />
-        )}
-        
-        {appState === AppState.Loading && (
-          <MagicLoader />
-        )}
-        
-        {appState === AppState.Result && userData && prediction && (
-          <NatalCard 
-            data={prediction} 
-            userData={userData}
-            onReset={handleReset} 
-          />
-        )}
-        
-        {appState === AppState.History && (
-          <HistoryView 
-            history={history}
-            onSelect={handleHistorySelect}
-            onBack={() => setAppState(userData && prediction ? AppState.Result : AppState.Onboarding)}
-          />
-        )}
+          {appState === AppState.Onboarding && (
+            <Onboarding onComplete={handleOnboardingComplete} />
+          )}
+          
+          {appState === AppState.Auth && (
+            <AuthModal 
+              onSuccess={handleAuthSuccess} 
+              onGuestAccess={handleGuestAccess}
+            />
+          )}
+          
+          {appState === AppState.Paywall && (
+            <Paywall onUnlock={handleUnlockPremium} />
+          )}
+          
+          {appState === AppState.Loading && (
+            <MagicLoader />
+          )}
+          
+          {appState === AppState.Result && userData && prediction && (
+            <NatalCard 
+              data={prediction} 
+              userData={userData}
+              onReset={handleReset} 
+            />
+          )}
+          
+          {appState === AppState.History && (
+            <HistoryView 
+              history={history}
+              onSelect={handleHistorySelect}
+              onBack={() => setAppState(userData && prediction ? AppState.Result : AppState.Onboarding)}
+            />
+          )}
 
-        {appState === AppState.Error && (
-          <div className="w-full max-w-md mx-auto p-6 animate-[fadeIn_1s_ease-out]">
-            <div className="glass-panel rounded-2xl p-8 shadow-2xl text-center border-red-500/20 bg-red-900/10">
-               <div className="text-4xl mb-4">🌑</div>
-               <h2 className="text-2xl font-mystic text-red-200 mb-4 uppercase tracking-widest">
-                 Космические Помехи
-               </h2>
-               <p className="text-purple-200 mb-6 font-serif italic break-words">
-                 {errorMessage}
-               </p>
-               <div className="flex flex-col gap-3">
-                 <button 
-                   onClick={handleRetry}
-                   className="px-8 py-3 rounded-lg font-mystic tracking-widest bg-amber-600 text-white hover:bg-amber-500 transition-all border border-amber-500/30 shadow-[0_0_15px_rgba(245,158,11,0.3)]"
-                 >
-                   Попробовать снова
-                 </button>
-                 <button 
-                   onClick={handleReset}
-                   className="text-xs text-gray-500 hover:text-gray-300 transition-colors uppercase tracking-widest"
-                 >
-                   Начать сначала
-                 </button>
+          {appState === AppState.Error && (
+            <div className="glass-panel rounded-2xl p-6 shadow-2xl text-center border-red-500/20 bg-red-900/10 w-full">
+               <div className="text-3xl mb-2">🌑</div>
+               <h2 className="text-lg font-mystic text-red-200 mb-2">Космические Помехи</h2>
+               <p className="text-purple-200 text-sm mb-4">{errorMessage}</p>
+               <div className="flex flex-col gap-2">
+                 <button onClick={handleRetry} className="px-6 py-2 rounded-lg bg-amber-600 text-white text-sm">Еще раз</button>
+                 <button onClick={handleReset} className="text-xs text-gray-500">Меню</button>
                </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </main>
       
       <InstallPrompt />
       
-      <footer className="relative z-10 p-4 text-center text-purple-900/40 text-xs font-serif">
-        &copy; {new Date().getFullYear()} Cosmic Alignments. Deterministic Logic Engine.
+      <footer className="relative z-10 py-2 text-center text-purple-900/30 text-[10px] font-serif shrink-0">
+        &copy; {new Date().getFullYear()} Aetheria.
       </footer>
     </div>
   );

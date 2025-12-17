@@ -32,11 +32,17 @@
         background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
         color: #e2e8f0;
         font-family: 'Lato', sans-serif;
-        overflow-x: hidden;
-        min-height: 100vh;
-        /* Prevent pull-to-refresh on mobile for app-like feel */
-        overscroll-behavior-y: none;
+        overflow: hidden; /* Disable body scroll strictly */
+        height: 100dvh;   /* Use dynamic viewport height */
+        width: 100vw;
+        position: fixed;  /* Prevent bounce effect on iOS */
+        overscroll-behavior: none;
         -webkit-tap-highlight-color: transparent;
+      }
+      #root {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
       }
       h1, h2, h3, h4, .font-mystic {
         font-family: 'Cinzel', serif;
@@ -86,6 +92,15 @@
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      /* Utilities to hide scrollbar but allow scroll if absolutely needed internally */
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
     </style>
 <script type="importmap">
