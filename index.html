@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f0c29" />
+    <meta name="theme-color" content="#050414" />
     
     <!-- PWA / Mobile Capable Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -24,12 +24,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;800&family=Lato:wght@300;400&display=swap" rel="stylesheet">
     <style>
       :root {
-        --color-mystic-dark: #0f0c29;
-        --color-mystic-purple: #302b63;
-        --color-mystic-black: #24243e;
+        --color-mystic-dark: #050414;
+        --color-mystic-purple: #1a1638;
       }
       body {
-        background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+        /* Deep dark background to remove 'hazy glow' */
+        background: #050414; 
         color: #e2e8f0;
         font-family: 'Lato', sans-serif;
         overflow: hidden; /* Disable body scroll strictly */
@@ -49,7 +49,7 @@
       }
       
       /* Star background animation */
-      .stars, .stars2, .stars3 {
+      .stars, .stars2 {
         position: fixed;
         top: 0;
         left: 0;
@@ -60,10 +60,11 @@
         display: block;
         background: transparent url('https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png') repeat top center; 
         z-index: -1;
+        pointer-events: none;
       }
       
-      .stars { background-size: 200px 200px; opacity: 0.1; animation: moveStars 100s linear infinite; }
-      .stars2 { background-size: 300px 300px; opacity: 0.15; animation: moveStars 150s linear infinite; }
+      .stars { background-size: 200px 200px; opacity: 0.15; animation: moveStars 100s linear infinite; }
+      .stars2 { background-size: 300px 300px; opacity: 0.1; animation: moveStars 150s linear infinite; }
       
       @keyframes moveStars {
         from {background-position: 0 0;}
@@ -86,12 +87,12 @@
         animation: pulse-glow 3s infinite;
       }
 
-      /* Glassmorphism utilities */
+      /* Glassmorphism utilities - Darker and cleaner */
       .glass-panel {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(15, 12, 41, 0.7); /* Darker base */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
       
       /* Utilities to hide scrollbar but allow scroll if absolutely needed internally */

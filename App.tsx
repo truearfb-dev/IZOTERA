@@ -258,17 +258,16 @@ export default function App() {
   };
 
   return (
-    <div className="h-full w-full relative flex flex-col overflow-hidden">
-      {/* Background Layers */}
-      <div className="fixed inset-0 pointer-events-none bg-[radial-gradient(circle_at_center,transparent_0%,#0f0c29_90%)] z-0"></div>
+    <div className="h-full w-full relative flex flex-col overflow-hidden bg-[#050414]">
+      {/* Background Layers - Removed the weird glow (radial gradient) */}
       <div className="stars fixed inset-0 pointer-events-none z-0"></div>
       <div className="stars2 fixed inset-0 pointer-events-none z-0"></div>
       
-      {/* Header - Compact */}
-      <header className="relative z-10 p-3 md:p-5 flex justify-between items-center max-w-4xl mx-auto w-full shrink-0">
+      {/* Header - Fixed & Static */}
+      <header className="fixed top-0 left-0 w-full z-50 p-4 flex justify-between items-center bg-gradient-to-b from-[#050414] via-[#050414]/90 to-transparent backdrop-blur-sm">
         <h1 
             onClick={() => { playSound('hover'); handleReset(); }}
-            className="text-xl md:text-2xl font-mystic tracking-[0.2em] text-amber-500/80 uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.3)] cursor-pointer hover:text-amber-400 transition-colors"
+            className="text-xl md:text-2xl font-mystic tracking-[0.2em] text-amber-500 uppercase drop-shadow-[0_0_5px_rgba(245,158,11,0.5)] cursor-pointer"
         >
           Aetheria
         </h1>
@@ -278,15 +277,15 @@ export default function App() {
              {appState !== AppState.History && (
                  <button 
                     onClick={handleOpenHistory}
-                    className="text-xs text-amber-200/50 hover:text-amber-100 transition-colors uppercase tracking-widest flex items-center gap-1"
+                    className="text-amber-200/50 hover:text-amber-100 transition-colors"
                  >
-                    <span className="text-lg">📜</span>
+                    <span className="text-xl">📜</span>
                  </button>
              )}
           
              {!isPremium && session.user.id !== GUEST_ID && (
-               <div className="text-[9px] md:text-[10px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-1 rounded-full">
-                 {usageCount}/{MAX_FREE_PREDICTIONS} Free
+               <div className="text-[9px] text-purple-300/50 uppercase tracking-widest border border-purple-500/20 px-2 py-0.5 rounded-full">
+                 {usageCount}/{MAX_FREE_PREDICTIONS}
                </div>
              )}
              <button 
@@ -299,7 +298,7 @@ export default function App() {
                  setAppState(AppState.Onboarding);
                  setUserData(null);
                }}
-               className="text-xs text-white/40 hover:text-white transition-colors"
+               className="text-[10px] text-white/30 hover:text-white transition-colors uppercase tracking-wider"
              >
                Выйти
              </button>
@@ -307,8 +306,8 @@ export default function App() {
         )}
       </header>
 
-      {/* Main Content Area - Scrollable internally if needed, but mostly fitted */}
-      <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-2 w-full overflow-hidden">
+      {/* Main Content Area - Added top padding to account for fixed header */}
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center p-3 pt-20 w-full overflow-hidden">
         <div className="w-full h-full flex flex-col items-center justify-center max-w-lg mx-auto">
           {appState === AppState.SetupRequired && (
             <div className="glass-panel p-6 rounded-2xl max-w-md text-center border-amber-500/30">
@@ -368,7 +367,7 @@ export default function App() {
       
       <InstallPrompt />
       
-      <footer className="relative z-10 py-2 text-center text-purple-900/30 text-[10px] font-serif shrink-0">
+      <footer className="relative z-10 py-2 text-center text-purple-900/20 text-[10px] font-serif shrink-0">
         &copy; {new Date().getFullYear()} Aetheria.
       </footer>
     </div>
