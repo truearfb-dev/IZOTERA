@@ -93,7 +93,7 @@ const StatBar: React.FC<{ label: string; value: number; color: string; delay: nu
         <span>{label}</span>
         <span>{width}%</span>
       </div>
-      <div className="h-1.5 bg-gray-800/50 rounded-full overflow-hidden">
+      <div className={`${compact ? 'h-1' : 'h-1.5'} bg-gray-800/50 rounded-full overflow-hidden`}>
         <div 
           className={`h-full ${color} shadow-[0_0_8px_currentColor] transition-all duration-[1500ms] ease-out`} 
           style={{ width: `${width}%` }}

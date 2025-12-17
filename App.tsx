@@ -10,7 +10,6 @@ import { HistoryView } from './components/HistoryView';
 import { UserData, DailyPrediction } from './types';
 import { generatePrediction } from './utils/astrology';
 import { playSound } from './utils/sounds';
-import { TRANSLATIONS } from './constants';
 
 enum AppState {
   SetupRequired,
